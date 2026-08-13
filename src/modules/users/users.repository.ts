@@ -5,7 +5,7 @@ import { CreateUserDto } from './dto/create-user.dto.js';
 
 const SALT_ROUNDS = 10;
 
-// Shape returned to callers that expose data via the API — password is never selected.
+// Shape returned to callers that expose data via the API password is never selected.
 const publicUserSelect = {
   id: true,
   name: true,
