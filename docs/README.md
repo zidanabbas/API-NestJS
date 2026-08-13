@@ -20,6 +20,7 @@ Selamat datang di dokumentasi teknis Food Ordering API. Gunakan daftar di bawah 
 | [features/users.md](features/users.md) | `GET /api/v1/users`, `POST /api/v1/users` |
 | [features/categories.md](features/categories.md) | `POST /api/v1/categories`, `GET /api/v1/categories`, `GET /api/v1/categories/:id`, `PATCH /api/v1/categories/:id`, `DELETE /api/v1/categories/:id` |
 | [features/products.md](features/products.md) | `POST /api/v1/products`, `GET /api/v1/products`, `GET /api/v1/products/:id`, `PATCH /api/v1/products/:id`, `DELETE /api/v1/products/:id` |
+| [features/orders.md](features/orders.md) | `POST /api/v1/orders`, `GET /api/v1/orders`, `GET /api/v1/orders/:id` |
 
 ## Konvensi Dokumen
 

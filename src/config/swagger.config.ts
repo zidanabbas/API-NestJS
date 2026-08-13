@@ -9,6 +9,9 @@ export function setupSwagger(app: INestApplication): void {
     .addTag('App', 'Health check & general endpoints')
     .addTag('Auth', 'Authentication & login')
     .addTag('Users', 'User registration & management')
+    .addTag('Categories', 'Kategori produk (CRUD)')
+    .addTag('Products', 'Produk (CRUD)')
+    .addTag('Orders', 'Pesanan & order items')
     .addBearerAuth()
     .build();
 

@@ -30,7 +30,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
           : 'Internal server error';
 
     // 5xx = kegagalan server sungguhan -> error. 4xx = kesalahan pemanggil
-    // (route salah, input invalid, dst) -> cukup warn, jangan bikin noise di log.
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(logMessage, logDetail);
     } else {

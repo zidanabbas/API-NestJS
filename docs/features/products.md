@@ -144,8 +144,8 @@ Setiap response produk (single maupun list) menyertakan relasi `category` secara
 
 ## Catatan & Batasan Saat Ini
 
-- **Tidak ada `@ApiTags`/dokumentasi Swagger tags** pada controller ini (tidak ada `@ApiTags('Products')`), sehingga endpoint muncul di Swagger UI tanpa pengelompokan tag khusus meski `@ApiProperty` pada DTO tetap terbaca.
+- Controller ini sudah memiliki `@ApiTags('Products')` beserta `@ApiOperation` dan anotasi response (`@ApiOkResponse`, `@ApiCreatedResponse`, `@ApiNotFoundResponse`), sehingga endpoint produk tampil dan terkelompok rapi di Swagger UI (`/docs`).
 - **Tidak ada guard autentikasi** pada endpoint tulis (`POST`, `PATCH`, `DELETE`) — sama seperti [categories](categories.md), siapa pun bisa mengubah data produk tanpa login.
 - **Belum ada filter/pagination**: `GET /api/v1/products` selalu mengembalikan seluruh baris. File [`query-product.dto.ts`](../../src/modules/products/dto/query-product.dto.ts) sudah disiapkan namanya tapi isinya masih kosong — kandidat kuat untuk menambahkan query seperti `?categoryId=`, `?search=`, `?page=&limit=`.
 - `product-response.dto.ts` juga masih kosong — response saat ini adalah hasil mentah Prisma (termasuk field seperti `isActive` yang belum bisa diubah user), bukan DTO yang dikurasi eksplisit.
-- Tidak ada validasi stok terhadap order (wajar, karena module `orders` [belum dibuat](../database.md#roadmap-order--payment)).
+- Validasi stok kini dilakukan oleh module [`orders`](orders.md) saat pesanan dibuat (`stock` produk dicek lalu di-`decrement` dalam satu transaksi), bukan oleh module `products` itu sendiri. Namun endpoint `products` di sini masih membolehkan `stock` diubah bebas via `PATCH` tanpa memperhitungkan pesanan berjalan.
