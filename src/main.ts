@@ -1,17 +1,24 @@
-import 'dotenv/config';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+
 import helmet from 'helmet';
-import { AppModule } from './app.module';
-import { ResponseInterceptor } from './common/interceptors/response.interceptor';
-import { HttpExceptionFilter } from './common/filter/http-exception.filter';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
+import { AppModule } from './app.module.js';
+import { HttpExceptionFilter } from './common/filter/http-exception.filter.js';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor.js';
+import { setupSwagger } from './config/swagger.config.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
   app.enableCors();
   app.use(helmet());
   app.setGlobalPrefix('api');
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -23,18 +30,8 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Swagger configuration
-  const config = new DocumentBuilder()
-    .setTitle('Food Ordering API')
-    .setDescription('REST API for Food Ordering System')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-
-  SwaggerModule.setup('docs', app, document);
-
-  await app.listen(process.env.PORT ?? 3000);
+  setupSwagger(app);
+  const port = configService.get<number>('app.port') ?? 3000;
+  await app.listen(port);
 }
 bootstrap();
