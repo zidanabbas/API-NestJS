@@ -1,0 +1,146 @@
+# Arsitektur Aplikasi
+
+## Ringkasan
+
+Food Ordering API dibangun dengan NestJS mengikuti pola layer klasik **Controller → Service → Repository**, dengan Prisma sebagai satu-satunya lapisan yang menyentuh database secara langsung.
+
+```mermaid
+flowchart LR
+    Client(["Client / Swagger UI"]) -->|HTTP request| Controller
+    subgraph Module["Feature Module (contoh: Products)"]
+        Controller["Controller\n(routing, DTO, Swagger docs)"]
+        Service["Service\n(business rules, validasi relasi)"]
+        Repository["Repository\n(query Prisma)"]
+        Controller --> Service --> Repository
+    end
+    Repository -->|Prisma Client| DB[("PostgreSQL")]
+```
+
+- **Controller** — hanya bertugas menerima HTTP request, memvalidasi bentuk data lewat DTO (`class-validator`), lalu mendelegasikan ke Service. Juga tempat anotasi Swagger (`@ApiTags`, `@ApiOperation`, dst).
+- **Service** — tempat business logic: cek duplikat, cek keberadaan relasi (mis. kategori harus ada sebelum produk dibuat), throw `NotFoundException` / `ConflictException` sesuai kondisi.
+- **Repository** — satu-satunya lapisan yang memanggil `PrismaService`. Memisahkan query database dari business logic sehingga service tetap mudah diuji/di-mock.
+
+Contoh nyata pola ini bisa dilihat di module `categories` dan `products`:
+
+- [categories.controller.ts](../src/modules/categories/categories.controller.ts) → [categories.service.ts](../src/modules/categories/categories.service.ts) → [categories.repository.ts](../src/modules/categories/categories.repository.ts)
+- [products.controller.ts](../src/modules/products/products.controller.ts) → [products.service.ts](../src/modules/products/products.service.ts) → [products.repository.ts](../src/modules/products/products.repository.ts)
+
+## Module Graph
+
+```mermaid
+flowchart TD
+    AppModule --> PrismaModule
+    AppModule --> AuthModule
+    AppModule --> UsersModule
+    AppModule --> CategoriesModule
+    AppModule --> ProductsModule
+
+    AuthModule -->|imports| UsersModule
+    ProductsModule -->|imports| CategoriesModule
+
+    PrismaModule -.->|"@Global()"| AuthModule
+    PrismaModule -.->|"@Global()"| UsersModule
+    PrismaModule -.->|"@Global()"| CategoriesModule
+    PrismaModule -.->|"@Global()"| ProductsModule
+```
+
+- `PrismaModule` ditandai `@Global()` ([prisma.module.ts](../src/database/prisma.module.ts)) sehingga `PrismaService` bisa langsung di-inject di repository module manapun tanpa perlu import ulang.
+- `AuthModule` meng-import `UsersModule` untuk mengecek kredensial user saat login.
+- `ProductsModule` meng-import `CategoriesModule` untuk memvalidasi `categoryId` saat membuat/mengubah produk.
+
+## Bootstrap & Global Providers
+
+Semua konfigurasi global didaftarkan di [src/main.ts](../src/main.ts):
+
+```ts
+app.enableCors();
+app.use(helmet());
+app.setGlobalPrefix('api');
+app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
+app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }));
+app.useGlobalInterceptors(new ResponseInterceptor());
+app.useGlobalFilters(new HttpExceptionFilter());
+setupSwagger(app);
+```
+
+| Provider | Fungsi |
+| -------- | ------ |
+| `helmet()` | Menambahkan HTTP security headers standar |
+| `enableCors()` | Mengizinkan request cross-origin (default: semua origin) |
+| `setGlobalPrefix('api')` | Semua route diawali `/api` |
+| `enableVersioning` (URI, default `1`) | Semua route otomatis berada di `/api/v1/...` kecuali controller secara eksplisit memakai `VERSION_NEUTRAL` (dipakai health check di `AppController`) |
+| `ValidationPipe` (`whitelist`, `transform`, `forbidNonWhitelisted`) | Body request divalidasi via `class-validator`; field yang tidak dikenal di DTO **ditolak** (400), field yang lolos otomatis di-transform ke tipe DTO |
+| `ResponseInterceptor` | Membungkus setiap response sukses — lihat [Response Envelope](#response-envelope) |
+| `HttpExceptionFilter` | Menstandarkan format error — lihat [Format Error](#format-error) |
+| `setupSwagger(app)` | Menyalakan dokumentasi OpenAPI di `/docs` — lihat [swagger.config.ts](../src/config/swagger.config.ts) |
+
+`LoggerMiddleware` ([logger.middleware.ts](../src/common/middleware/logger.middleware.ts)) didaftarkan di [app.module.ts](../src/app.module.ts) untuk semua route (`forRoutes('*')`) dan mencatat `METHOD URL STATUS - durasi(ms)` ke console setiap request selesai.
+
+## Response Envelope
+
+`ResponseInterceptor` ([response.interceptor.ts](../src/common/interceptors/response.interceptor.ts)) membungkus **setiap response sukses** menjadi:
+
+```json
+{
+  "success": true,
+  "data": { /* payload asli dari controller/service */ }
+}
+```
+
+Dokumen fitur di folder ini menampilkan payload `data` apa adanya — ingat untuk membungkusnya dalam `{ success, data }` saat membaca response asli dari API.
+
+## Format Error
+
+`HttpExceptionFilter` ([http-exception.filter.ts](../src/common/filter/http-exception.filter.ts)) menangkap **semua** exception (`@Catch()` tanpa argumen) dan mengembalikan format konsisten:
+
+```json
+{
+  "success": false,
+  "statusCode": 404,
+  "timestamp": "2026-08-13T02:00:00.000Z",
+  "message": "Category not found"
+}
+```
+
+- Jika exception adalah `HttpException` (mis. `NotFoundException`, `ConflictException`, `UnauthorizedException`, atau error validasi dari `ValidationPipe`), `statusCode` dan `message` diambil dari exception tersebut. Untuk error validasi, `message` berupa **array string** (satu per field yang gagal validasi).
+- Jika bukan `HttpException` (error tak terduga/bug), `statusCode` menjadi `500` dan `message` menjadi `"Internal server error"`.
+- Error `5xx` dicatat sebagai `logger.error` (dengan stack trace), error `4xx` dicatat sebagai `logger.warn` (tanpa stack trace) agar log tidak penuh noise dari kesalahan input biasa.
+
+## Autentikasi
+
+Autentikasi memakai **JWT Bearer token** via Passport (`passport-jwt`). Detail lengkap ada di [features/auth.md](features/auth.md). Poin penting arsitektur:
+
+- `JwtStrategy` ([jwt.strategy.ts](../src/modules/auth/strategies/jwt.strategy.ts)) memvalidasi signature & masa berlaku token, lalu meng-attach `{ userId, email, role }` ke `request.user`.
+- `JwtAuthGuard` ([jwt-auth.guard.ts](../src/modules/auth/guards/jwt-auth.guard.ts)) dipasang per-route dengan `@UseGuards(JwtAuthGuard)` — **bukan** global guard. Artinya setiap route publik secara default kecuali ditandai guard ini secara eksplisit.
+- Saat ini hanya `GET /api/v1/users` yang diproteksi. Module `categories` dan `products` **belum** memasang guard apa pun (lihat catatan di [features/categories.md](features/categories.md) dan [features/products.md](features/products.md)).
+
+## Struktur Folder `src/`
+
+```
+src/
+├── common/
+│   ├── filter/http-exception.filter.ts       # Global exception filter
+│   ├── interceptors/response.interceptor.ts  # Global response envelope
+│   └── middleware/logger.middleware.ts       # Request logger
+├── config/
+│   ├── app.config.ts       # NODE_ENV, PORT
+│   ├── database.config.ts  # DATABASE_URL, DIRECT_URL
+│   ├── jwt.config.ts       # JWT_SECRET, JWT_EXPIRES_IN
+│   └── swagger.config.ts   # Setup dokumen OpenAPI (/docs)
+├── database/
+│   ├── prisma.module.ts    # @Global() module, expose PrismaService
+│   └── prisma.service.ts   # Extends PrismaClient, pakai adapter-pg
+├── generated/prisma/        # Output `prisma generate` — JANGAN diedit manual
+└── modules/
+    ├── auth/
+    ├── users/
+    ├── categories/
+    └── products/
+```
+
+Semua import antar file memakai ekstensi `.js` eksplisit (mis. `from './app.module.js'`) karena proyek berjalan sebagai **ESM murni** (`"type": "module"` di `package.json`, `module: "nodenext"` di `tsconfig.json`). Alias path `@/*` mengarah ke `src/*` (dikonfigurasi di `tsconfig.json` dan di-resolve saat build oleh `tsc-alias`).
+
+## Selanjutnya
+
+- [database.md](database.md) — skema Prisma & ERD
+- [features/](.) — spesifikasi tiap endpoint

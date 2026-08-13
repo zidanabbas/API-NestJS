@@ -8,7 +8,9 @@ import databaseConfig from './config/database.config.js';
 import jwtConfig from './config/jwt.config.js';
 import { LoggerMiddleware } from './common/middleware/logger.middleware.js';
 import { AuthModule } from './modules/auth/auth-module.js';
-import { UsersModule } from './modules/user/user.module.js';
+import { UsersModule } from './modules/users/user.module.js';
+import { CategoriesModule } from './modules/categories/categories.module.js';
+import { ProductsModule } from './modules/products/products.module.js';
 
 @Module({
   imports: [
@@ -17,8 +19,10 @@ import { UsersModule } from './modules/user/user.module.js';
       load: [appConfig, databaseConfig, jwtConfig],
     }),
     PrismaModule,
-    UsersModule,
     AuthModule,
+    UsersModule,
+    CategoriesModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

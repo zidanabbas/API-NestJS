@@ -2,97 +2,178 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+<h1 align="center">Food Ordering API</h1>
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+<p align="center">
+  REST API untuk sistem pemesanan makanan (food ordering), dibangun dengan <a href="https://nestjs.com">NestJS</a>, <a href="https://www.prisma.io">Prisma ORM</a>, dan PostgreSQL.
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Daftar Isi
 
-## Project setup
+- [Tentang Proyek](#tentang-proyek)
+- [Tech Stack](#tech-stack)
+- [Fitur](#fitur)
+- [Struktur Proyek](#struktur-proyek)
+- [Instalasi Cepat](#instalasi-cepat)
+- [Environment Variables](#environment-variables)
+- [Menjalankan Aplikasi](#menjalankan-aplikasi)
+- [Testing](#testing)
+- [API Documentation (Swagger)](#api-documentation-swagger)
+- [Dokumentasi Lengkap](#dokumentasi-lengkap)
+- [Lisensi](#lisensi)
 
-```bash
-$ npm install
+## Tentang Proyek
+
+Food Ordering API adalah backend service untuk aplikasi pemesanan makanan. Saat ini API menyediakan pengelolaan **user**, **autentikasi (JWT)**, **kategori produk**, dan **produk**. Skema database juga sudah menyiapkan entitas **Order**, **OrderItem**, dan **Payment** (QRIS) untuk pengembangan fitur pemesanan & pembayaran selanjutnya.
+
+## Tech Stack
+
+| Layer            | Teknologi |
+| ----------------- | --------- |
+| Framework          | [NestJS 11](https://nestjs.com) (Express platform) |
+| Bahasa             | TypeScript 5 (ESM / `nodenext`) |
+| ORM                | [Prisma ORM 7](https://www.prisma.io) + `@prisma/adapter-pg` |
+| Database           | PostgreSQL |
+| Auth               | Passport + `@nestjs/jwt` (JWT Bearer) |
+| Validasi           | `class-validator` + `class-transformer` |
+| API Docs           | `@nestjs/swagger` (OpenAPI, tersedia di `/docs`) |
+| Password Hashing   | `bcrypt` |
+| Keamanan HTTP      | `helmet`, CORS |
+| Testing            | Jest + Supertest |
+
+## Fitur
+
+| Fitur | Status | Dokumentasi |
+| ----- | ------ | ----------- |
+| Health check | ✅ | — |
+| Autentikasi (login JWT) | ✅ | [docs/features/auth.md](docs/features/auth.md) |
+| Manajemen User (registrasi & list) | ✅ | [docs/features/users.md](docs/features/users.md) |
+| Kategori Produk (CRUD) | ✅ | [docs/features/categories.md](docs/features/categories.md) |
+| Produk (CRUD) | ✅ | [docs/features/products.md](docs/features/products.md) |
+| Order & Payment (QRIS) | 🚧 skema database siap, service/endpoint belum dibuat | [docs/database.md](docs/database.md#roadmap-order--payment) |
+
+Lihat detail lengkap tiap fitur (endpoint, request/response, business rules) di folder [`docs/`](docs/README.md).
+
+## Struktur Proyek
+
+```
+latihan-nest/
+├── docs/                        # Dokumentasi lengkap (arsitektur, database, per-fitur)
+├── prisma/
+│   └── schema.prisma            # Skema database (User, Product, Category, Order, OrderItem, Payment)
+├── src/
+│   ├── common/
+│   │   ├── filter/               # Global exception filter (response error konsisten)
+│   │   ├── interceptors/         # Global response interceptor (wrap { success, data })
+│   │   └── middleware/           # Logger middleware (mencatat method, url, status, durasi)
+│   ├── config/                   # app/database/jwt config + setup Swagger
+│   ├── database/                 # PrismaService & PrismaModule (global)
+│   ├── generated/prisma/         # Output Prisma Client (auto-generated, jangan diedit manual)
+│   ├── modules/
+│   │   ├── auth/                 # Login, JWT strategy & guard
+│   │   ├── users/                # Registrasi & daftar user
+│   │   ├── categories/           # CRUD kategori produk
+│   │   └── products/             # CRUD produk
+│   ├── app.module.ts
+│   ├── app.controller.ts         # Health check endpoint
+│   └── main.ts                   # Bootstrap: prefix /api, versioning, pipes, filters, Swagger
+└── test/                         # e2e tests
 ```
 
-## Compile and run the project
+Setiap module mengikuti pola **Controller → Service → Repository**:
+
+- **Controller** — menangani HTTP request/response & dokumentasi Swagger.
+- **Service** — business logic & validasi aturan bisnis (mis. cek duplikat, cek relasi).
+- **Repository** — satu-satunya lapisan yang berbicara langsung ke Prisma/database.
+
+Detail lebih dalam ada di [docs/architecture.md](docs/architecture.md).
+
+## Instalasi Cepat
+
+Prasyarat: Node.js ≥ 18, PostgreSQL, npm.
 
 ```bash
-# development
-$ npm run start
+# 1. Install dependencies
+npm install
 
-# watch mode
-$ npm run start:dev
+# 2. Salin file environment lalu sesuaikan nilainya
+cp .env.example .env
 
-# production mode
-$ npm run start:prod
+# 3. Jalankan migrasi database
+npx prisma migrate dev
+
+# 4. Jalankan aplikasi (watch mode)
+npm run start:dev
 ```
 
-## Run tests
+Panduan instalasi lengkap (termasuk troubleshooting) ada di [docs/getting-started.md](docs/getting-started.md).
+
+## Environment Variables
+
+| Variable          | Wajib | Default       | Keterangan |
+| ------------------ | ----- | ------------- | ---------- |
+| `NODE_ENV`          | ❌    | `development` | Environment aplikasi |
+| `PORT`              | ❌    | `3000`        | Port HTTP server |
+| `DATABASE_URL`      | ✅    | —             | Connection string PostgreSQL, dipakai Prisma |
+| `DIRECT_URL`        | ❌    | —             | Connection string langsung (opsional, untuk migrasi di balik connection pooler) |
+| `JWT_SECRET`        | ✅    | —             | Secret untuk sign/verify JWT — **wajib diganti di production** |
+| `JWT_EXPIRES_IN`    | ❌    | `1d`          | Masa berlaku access token |
+
+Lihat contoh lengkap di [`.env.example`](.env.example).
+
+## Menjalankan Aplikasi
 
 ```bash
-# unit tests
-$ npm run test
+# development (single run)
+npm run start
 
-# e2e tests
-$ npm run test:e2e
+# watch mode (rebuild otomatis saat ada perubahan)
+npm run start:dev
 
-# test coverage
-$ npm run test:cov
+# debug mode (attach ke Node inspector)
+npm run start:debug
+
+# production (menjalankan hasil build di dist/)
+npm run build
+npm run start:prod
 ```
 
-## Deployment
+Setelah berjalan, base URL API ada di `http://localhost:3000/api/v1` (health check di `http://localhost:3000/api`, tanpa versi).
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Testing
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run test        # unit test
+npm run test:watch  # unit test, watch mode
+npm run test:cov    # unit test + coverage report
+npm run test:e2e    # end-to-end test
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## API Documentation (Swagger)
 
-## Resources
+Dokumentasi interaktif (OpenAPI) tersedia otomatis saat aplikasi berjalan:
 
-Check out a few resources that may come in handy when working with NestJS:
+```
+http://localhost:3000/docs
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Endpoint yang butuh login (mis. `GET /api/v1/users`) bisa dicoba langsung dari Swagger UI dengan klik **Authorize** lalu masukkan `Bearer <accessToken>` hasil login.
 
-## Support
+## Dokumentasi Lengkap
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Semua dokumentasi detail (arsitektur, skema database, dan spesifikasi tiap fitur/endpoint) ada di folder [`docs/`](docs/README.md):
 
-## Stay in touch
+- [docs/README.md](docs/README.md) — daftar isi dokumentasi
+- [docs/getting-started.md](docs/getting-started.md) — instalasi & setup detail
+- [docs/architecture.md](docs/architecture.md) — arsitektur aplikasi, alur request, global providers
+- [docs/database.md](docs/database.md) — skema Prisma, ERD, relasi antar tabel
+- [docs/features/auth.md](docs/features/auth.md) — autentikasi & JWT
+- [docs/features/users.md](docs/features/users.md) — manajemen user
+- [docs/features/categories.md](docs/features/categories.md) — kategori produk
+- [docs/features/products.md](docs/features/products.md) — produk
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Lisensi
 
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+`UNLICENSED` — proyek privat, hak cipta oleh pemilik repository.
