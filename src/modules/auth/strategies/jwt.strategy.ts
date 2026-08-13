@@ -33,8 +33,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  // Runs after the token signature/expiry is verified. Whatever is returned
-  // here becomes `request.user`.
   validate(payload: JwtPayload): AuthenticatedUser {
     if (!payload?.sub) {
       throw new UnauthorizedException('Invalid token payload');
