@@ -8,7 +8,7 @@
     "^.+\\.(t|j)s$": ["ts-jest", { "useESM": true }]
   },
   "moduleNameMapper": {
-    "^@/(.*)\\.js$": "<rootDir>/../src/$1",
+    "^#app/(.*)\\.js$": "<rootDir>/../src/$1",
     "^(\\.{1,2}/.*)\\.js$": "$1"
   }
 }

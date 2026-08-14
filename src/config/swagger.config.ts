@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export function setupSwagger(app: INestApplication): void {
@@ -9,6 +9,9 @@ export function setupSwagger(app: INestApplication): void {
     .addTag('App', 'Health check & general endpoints')
     .addTag('Auth', 'Authentication & login')
     .addTag('Users', 'User registration & management')
+    .addTag('Categories', 'Product categories (CRUD)')
+    .addTag('Products', 'Products (CRUD)')
+    .addTag('Orders', 'Orders & order items')
     .addBearerAuth()
     .build();
 

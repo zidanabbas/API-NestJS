@@ -8,9 +8,10 @@ import databaseConfig from './config/database.config.js';
 import jwtConfig from './config/jwt.config.js';
 import { LoggerMiddleware } from './common/middleware/logger.middleware.js';
 import { AuthModule } from './modules/auth/auth-module.js';
-import { UsersModule } from './modules/users/user.module.js';
+import { UsersModule } from './modules/users/users.module.js';
 import { CategoriesModule } from './modules/categories/categories.module.js';
 import { ProductsModule } from './modules/products/products.module.js';
+import { OrdersModule } from './modules/orders/orders.module.js';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ProductsModule } from './modules/products/products.module.js';
     UsersModule,
     CategoriesModule,
     ProductsModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

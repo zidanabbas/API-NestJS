@@ -141,6 +141,6 @@ Response `200 OK`, diurutkan dari yang terbaru (`createdAt` descending):
 
 ## Catatan & Batasan Saat Ini
 
-- **Tidak ada `@ApiTags`/dokumentasi Swagger** pada controller ini (berbeda dari `auth`/`users`), sehingga endpoint kategori **tidak muncul** di Swagger UI (`/docs`) meskipun aktif dan bisa diakses langsung via HTTP.
+- Controller ini sudah memiliki `@ApiTags('Categories')` beserta `@ApiOperation` dan anotasi response (`@ApiOkResponse`, `@ApiNotFoundResponse`, `@ApiConflictResponse`), sehingga endpoint kategori tampil dan terkelompok rapi di Swagger UI (`/docs`).
 - **Tidak ada guard autentikasi** (`JwtAuthGuard`) pada endpoint tulis (`POST`, `PATCH`, `DELETE`) — siapa pun bisa membuat/mengubah/menghapus kategori tanpa login. Jika ingin dibatasi hanya `ADMIN`, tambahkan `@UseGuards(JwtAuthGuard)` (dan role guard bila dibuat) pada method terkait, mengikuti contoh di [UsersController.findAll](../../src/modules/users/users.controller.ts).
 - Kolom `isActive` di model `Category` sudah ada di database namun belum bisa di-set/diubah lewat DTO manapun — kategori baru selalu `isActive: true`.

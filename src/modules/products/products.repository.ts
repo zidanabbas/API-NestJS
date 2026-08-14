@@ -1,6 +1,6 @@
-import { PrismaService } from '@/database/prisma.service.js';
-import { Prisma } from '@/generated/prisma/client.js';
-import { ProductUpdateInput } from '@/generated/prisma/models.js';
+import { PrismaService } from '#app/database/prisma.service.js';
+import { Prisma } from '#app/generated/prisma/client.js';
+import { ProductUpdateInput } from '#app/generated/prisma/models.js';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()

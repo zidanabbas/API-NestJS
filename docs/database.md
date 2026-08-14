@@ -125,7 +125,7 @@ Lihat [features/categories.md](features/categories.md).
 
 Lihat [features/products.md](features/products.md).
 
-### `Order` *(skema siap, endpoint belum dibuat)*
+### `Order`
 
 | Field | Tipe | Keterangan |
 | ----- | ---- | ---------- |
@@ -137,7 +137,11 @@ Lihat [features/products.md](features/products.md).
 | `items` | `OrderItem[]` | |
 | `payment` | `Payment?` | Relasi one-to-one opsional |
 
-### `OrderItem` *(skema siap, endpoint belum dibuat)*
+Lihat [features/orders.md](features/orders.md).
+
+> Catatan: `status` di-set otomatis ke `PENDING` saat order dibuat. Transisi status berikutnya (`CONFIRMED`, dst.) sudah didukung di repository (`updateStatus`) tetapi belum diekspos lewat endpoint.
+
+### `OrderItem`
 
 | Field | Tipe | Keterangan |
 | ----- | ---- | ---------- |
@@ -172,12 +176,15 @@ Lihat [features/products.md](features/products.md).
 
 ## Roadmap Order & Payment
 
-Model `Order`, `OrderItem`, dan `Payment` **sudah ada di skema database** (lihat [schema.prisma](../prisma/schema.prisma)) tetapi **belum memiliki module NestJS** (tidak ada folder `src/modules/orders` atau `src/modules/payments`, dan tidak terdaftar di [app.module.ts](../src/app.module.ts)). Ini adalah area pengembangan berikutnya yang wajar mengikuti pola module lain (`Controller → Service → Repository`), misalnya:
+Module **`orders` sudah diimplementasikan** (`Controller → Service → Repository`, terdaftar di [app.module.ts](../src/app.module.ts)) — mencakup pembuatan order + order items dalam satu transaksi, perhitungan `totalAmount`, dan pengurangan `stock`. Lihat [features/orders.md](features/orders.md).
 
-- `POST /api/v1/orders` — membuat order + order items, hitung `totalAmount`, kurangi `stock` produk.
-- `GET /api/v1/orders/:id` — detail order beserta items & status pembayaran.
-- `POST /api/v1/orders/:id/payment` — generate QRIS payment.
-- Webhook/endpoint untuk update `PaymentStatus` dari payment gateway.
+Yang **masih menjadi pengembangan berikutnya**:
+
+- `PATCH /api/v1/orders/:id/status` — mengubah status order (`updateStatus` sudah ada di repository tetapi belum terekspos).
+- Filter/pagination untuk `GET /api/v1/orders`.
+- **Module `payments`** — model `Payment` **sudah ada di skema** tetapi **belum memiliki module NestJS** (tidak ada folder `src/modules/payments`). Rencana endpoint:
+  - `POST /api/v1/orders/:id/payment` — generate QRIS payment.
+  - Webhook/endpoint untuk update `PaymentStatus` dari payment gateway.
 
 ## Prisma Client
 

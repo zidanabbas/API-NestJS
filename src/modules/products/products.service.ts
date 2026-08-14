@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ProductsRepository } from './products.repository.js';
-import { CategoriesRepository } from '../categories/categories.repository.js';
+import { CategoriesRepository } from '#app/modules/categories/categories.repository.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 
