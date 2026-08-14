@@ -35,22 +35,26 @@ flowchart TD
     AppModule --> CategoriesModule
     AppModule --> ProductsModule
     AppModule --> OrdersModule
+    AppModule --> TablesModule
 
     AuthModule -->|imports| UsersModule
     ProductsModule -->|imports| CategoriesModule
     OrdersModule -->|imports| PrismaModule
+    OrdersModule -->|imports| TablesModule
 
     PrismaModule -.->|"@Global()"| AuthModule
     PrismaModule -.->|"@Global()"| UsersModule
     PrismaModule -.->|"@Global()"| CategoriesModule
     PrismaModule -.->|"@Global()"| ProductsModule
     PrismaModule -.->|"@Global()"| OrdersModule
+    PrismaModule -.->|"@Global()"| TablesModule
 ```
 
 - `PrismaModule` ditandai `@Global()` ([prisma.module.ts](../src/database/prisma.module.ts)) sehingga `PrismaService` bisa langsung di-inject di repository module manapun tanpa perlu import ulang.
 - `AuthModule` meng-import `UsersModule` untuk mengecek kredensial user saat login.
 - `ProductsModule` meng-import `CategoriesModule` untuk memvalidasi `categoryId` saat membuat/mengubah produk.
 - `OrdersModule` meng-import `PrismaModule` secara eksplisit ([orders.module.ts](../src/modules/orders/orders.module.ts)) karena `OrdersService` juga menyuntik `PrismaService` langsung untuk menjalankan transaksi lintas tabel.
+- `OrdersModule` meng-import `TablesModule` agar `TablesRepository` bisa di-inject ke `OrdersService` untuk resolve `tableCode` → `tableId` saat membuat order (lihat [features/orders.md](features/orders.md#pengaitan-meja-tablecode)). `TablesModule` meng-`exports` `TablesService` dan `TablesRepository` ([tables.module.ts](../src/modules/tables/tables.module.ts)) untuk keperluan ini.
 
 ## Bootstrap & Global Providers
 
@@ -158,7 +162,8 @@ src/
     ├── users/
     ├── categories/
     ├── products/
-    └── orders/
+    ├── orders/
+    └── tables/
 ```
 
 Semua import antar file memakai ekstensi `.js` eksplisit (mis. `from './app.module.js'`) karena proyek berjalan sebagai **ESM murni** (`"type": "module"` di `package.json`, `module: "nodenext"` di `tsconfig.json`). Untuk import lintas folder tanpa jalur relatif dalam (`../../`), proyek memakai **Node.js subpath imports**: prefix `#app/*` (didefinisikan di field `imports` [package.json](../package.json)) menunjuk ke `src/*` saat pengecekan tipe dan `dist/*` saat runtime — mekanisme native Node/TypeScript tanpa perlu `tsc-alias`. Contoh: `import { PrismaService } from '#app/database/prisma.service.js'`.

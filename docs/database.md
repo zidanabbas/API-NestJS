@@ -77,7 +77,7 @@ erDiagram
     Table {
         int id PK
         string code UK
-        int number UK "nullable"
+        int number UK
         string name
         boolean isActive
         datetime createdAt
@@ -166,21 +166,23 @@ Lihat [features/orders.md](features/orders.md).
 | `price` | `Decimal(12,2)` | Harga produk saat pesanan dibuat (snapshot, agar tidak berubah jika harga produk berubah kemudian) |
 | `subtotal` | `Decimal(12,2)` | `price * quantity` |
 
-### `Table` *(skema siap, endpoint belum dibuat)*
+### `Table`
 
 Merepresentasikan meja fisik untuk pesanan dine-in. Satu meja bisa menaungi banyak `Order`.
 
 | Field | Tipe | Keterangan |
 | ----- | ---- | ---------- |
 | `id` | `Int` (PK, autoincrement) | |
-| `code` | `String` (unique) | Kode unik meja — kandidat untuk di-encode sebagai QR code di meja |
-| `number` | `Int?` (unique) | Nomor meja; opsional, tapi harus unik bila diisi |
+| `code` | `String` (unique) | Kode unik meja, di-generate otomatis oleh server (tidak pernah input manual) — dirancang untuk di-encode sebagai QR code di meja. Lihat [features/tables.md](features/tables.md#business-rules) |
+| `number` | `Int` (unique) | Nomor meja untuk staff; wajib unik. Bila tidak dikirim saat create, di-auto-increment oleh server |
 | `name` | `String` | Nama/label meja (mis. `"Meja 1"`, `"VIP 2"`) |
-| `isActive` | `Boolean` | Default `true` |
-| `order` | `Order[]` | Relasi one-to-many ke `Order` |
+| `isActive` | `Boolean` | Default `true`. Kolom tersedia di skema, belum diekspos lewat DTO/endpoint |
+| `orders` | `Order[]` | Relasi one-to-many ke `Order` |
 | `createdAt` / `updatedAt` | `DateTime` | Auto-managed Prisma |
 
-> Seperti `Payment`, model `Table` sudah ada di skema tetapi **belum memiliki module/endpoint NestJS** (tidak ada folder `src/modules/tables`). Relasi `Order.tableId` bersifat opsional, jadi endpoint order yang ada saat ini tetap berjalan tanpa mengisi meja.
+Lihat [features/tables.md](features/tables.md).
+
+> Relasi `Order.tableId` bersifat opsional (`ON DELETE SET NULL`), jadi order tetap bisa dibuat tanpa mengisi meja (mis. order lewat scan QR menu umum, bukan QR yang menempel di meja tertentu).
 
 ### `Payment` *(skema siap, endpoint belum dibuat)*
 
@@ -204,18 +206,20 @@ Merepresentasikan meja fisik untuk pesanan dine-in. Satu meja bisa menaungi bany
 | `PaymentStatus` | `PENDING`, `PAID`, `FAILED`, `EXPIRED`, `REFUNDED` |
 | `PaymentMethod` | `QRIS` |
 
-## Roadmap Order & Payment
+## Roadmap Order, Table & Payment
 
-Module **`orders` sudah diimplementasikan** (`Controller → Service → Repository`, terdaftar di [app.module.ts](../src/app.module.ts)) — mencakup pembuatan order + order items dalam satu transaksi, perhitungan `totalAmount`, dan pengurangan `stock`. Lihat [features/orders.md](features/orders.md).
+Module **`orders` sudah diimplementasikan** (`Controller → Service → Repository`, terdaftar di [app.module.ts](../src/app.module.ts)) — mencakup pembuatan order + order items dalam satu transaksi, perhitungan `totalAmount`, pengurangan `stock`, dan pengaitan opsional ke `Table` lewat `tableCode`. Lihat [features/orders.md](features/orders.md).
+
+Module **`tables` sudah diimplementasikan** — CRUD meja lengkap termasuk generate `code` otomatis (untuk QR) dan auto-increment `number`. Lihat [features/tables.md](features/tables.md).
 
 Yang **masih menjadi pengembangan berikutnya**:
 
 - `PATCH /api/v1/orders/:id/status` — mengubah status order (`updateStatus` sudah ada di repository tetapi belum terekspos).
-- Filter/pagination untuk `GET /api/v1/orders`.
+- Filter/pagination untuk `GET /api/v1/orders` dan `GET /api/v1/tables`.
 - **Module `payments`** — model `Payment` **sudah ada di skema** tetapi **belum memiliki module NestJS** (tidak ada folder `src/modules/payments`). Rencana endpoint:
   - `POST /api/v1/orders/:id/payment` — generate QRIS payment.
   - Webhook/endpoint untuk update `PaymentStatus` dari payment gateway.
-- **Module `tables`** — model `Table` **sudah ada di skema** (dengan relasi opsional `Order.tableId`) tetapi **belum memiliki module NestJS** (tidak ada folder `src/modules/tables`). Rencana: CRUD meja + mengaitkan `tableId` saat membuat order (dine-in / QR order per meja).
+- **Endpoint generate gambar QR meja** — module `tables` saat ini hanya menyediakan `code` sebagai string; encoding jadi gambar QR (dan embed `code` ke URL frontend) belum jadi bagian API ini.
 
 ## Prisma Client
 
