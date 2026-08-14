@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { PrismaService } from '@/database/prisma.service.js';
+import { PrismaService } from '#app/database/prisma.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 
 const SALT_ROUNDS = 10;

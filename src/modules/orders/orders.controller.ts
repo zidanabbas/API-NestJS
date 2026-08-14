@@ -23,7 +23,7 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Buat pesanan baru (beserta item-nya)' })
+  @ApiOperation({ summary: 'Buat pesanan baru dengan itemnya' })
   @ApiCreatedResponse({ description: 'Pesanan berhasil dibuat' })
   @ApiBadRequestResponse({
     description: 'Produk nonaktif atau stok tidak mencukupi',
@@ -42,7 +42,9 @@ export class OrdersController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Detail satu pesanan' })
-  @ApiOkResponse({ description: 'Detail pesanan beserta item, produk & payment' })
+  @ApiOkResponse({
+    description: 'Detail pesanan beserta item, produk & payment',
+  })
   @ApiNotFoundResponse({ description: 'Pesanan tidak ditemukan' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.ordersService.findOne(id);

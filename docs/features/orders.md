@@ -6,11 +6,11 @@ Membuat dan membaca pesanan. Membuat order adalah operasi **multi-langkah** yang
 
 ## Endpoint
 
-| Method | Path | Auth | Deskripsi |
-| ------ | ---- | :--: | --------- |
-| `POST` | `/api/v1/orders` | Publik ⚠️ | Buat pesanan baru (beserta item-nya) |
-| `GET`  | `/api/v1/orders` | Publik | Daftar semua pesanan |
-| `GET`  | `/api/v1/orders/:id` | Publik | Detail satu pesanan |
+| Method | Path                 |   Auth    | Deskripsi                        |
+| ------ | -------------------- | :-------: | -------------------------------- |
+| `POST` | `/api/v1/orders`     | Publik ⚠️ | Buat pesanan baru dengan itemnya |
+| `GET`  | `/api/v1/orders`     |  Publik   | Daftar semua pesanan             |
+| `GET`  | `/api/v1/orders/:id` |  Publik   | Detail satu pesanan              |
 
 > ⚠️ Lihat [Catatan & Batasan](#catatan--batasan-saat-ini) — semua endpoint saat ini **tidak** dilindungi login/role apa pun.
 
@@ -31,13 +31,13 @@ Setiap response order menyertakan relasi `items` (masing-masing dengan `product`
 }
 ```
 
-| Field | Tipe | Validasi |
-| ----- | ---- | -------- |
-| `customerName` | `string` | wajib, tidak boleh kosong |
-| `customerPhone` | `string` | wajib, tidak boleh kosong |
-| `items` | `array` | wajib, minimal 1 item, tiap elemen divalidasi ([CreateOrderItemDto](../../src/modules/orders/dto/order-item.dto.ts)) |
-| `items[].productId` | `number` | wajib, integer, minimal `1` |
-| `items[].quantity` | `number` | wajib, integer, minimal `1` |
+| Field               | Tipe     | Validasi                                                                                                             |
+| ------------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
+| `customerName`      | `string` | wajib, tidak boleh kosong                                                                                            |
+| `customerPhone`     | `string` | wajib, tidak boleh kosong                                                                                            |
+| `items`             | `array`  | wajib, minimal 1 item, tiap elemen divalidasi ([CreateOrderItemDto](../../src/modules/orders/dto/order-item.dto.ts)) |
+| `items[].productId` | `number` | wajib, integer, minimal `1`                                                                                          |
+| `items[].quantity`  | `number` | wajib, integer, minimal `1`                                                                                          |
 
 **Response `201 Created`** — order yang baru dibuat beserta item-nya:
 
@@ -146,13 +146,13 @@ Jika langkah mana pun melempar error, transaksi otomatis **rollback** — tidak 
 
 ## Implementasi Teknis
 
-| File | Peran |
-| ---- | ----- |
-| [orders.controller.ts](../../src/modules/orders/orders.controller.ts) | Routing `POST` / `GET` / `GET :id` |
-| [orders.service.ts](../../src/modules/orders/orders.service.ts) | Orkestrasi transaksi, validasi item, hitung total, generate `orderNumber` |
-| [orders.repository.ts](../../src/modules/orders/orders.repository.ts) | Query Prisma (`create` menerima `tx`, `findAll`, `findById`, `updateStatus`) |
-| [dto/create-order.dto.ts](../../src/modules/orders/dto/create-order.dto.ts) | Validasi request create (termasuk nested `items`) |
-| [dto/order-item.dto.ts](../../src/modules/orders/dto/order-item.dto.ts) | Validasi tiap elemen `items` (`productId`, `quantity`) |
+| File                                                                        | Peran                                                                        |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [orders.controller.ts](../../src/modules/orders/orders.controller.ts)       | Routing `POST` / `GET` / `GET :id`                                           |
+| [orders.service.ts](../../src/modules/orders/orders.service.ts)             | Orkestrasi transaksi, validasi item, hitung total, generate `orderNumber`    |
+| [orders.repository.ts](../../src/modules/orders/orders.repository.ts)       | Query Prisma (`create` menerima `tx`, `findAll`, `findById`, `updateStatus`) |
+| [dto/create-order.dto.ts](../../src/modules/orders/dto/create-order.dto.ts) | Validasi request create (termasuk nested `items`)                            |
+| [dto/order-item.dto.ts](../../src/modules/orders/dto/order-item.dto.ts)     | Validasi tiap elemen `items` (`productId`, `quantity`)                       |
 
 Catatan implementasi:
 

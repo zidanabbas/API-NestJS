@@ -35,7 +35,7 @@ export class ProductsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Daftar semua produk (terbaru dulu)' })
+  @ApiOperation({ summary: 'Daftar semua produk' })
   @ApiOkResponse({ description: 'Daftar produk beserta relasi category' })
   findAll() {
     return this.productsService.findAll();

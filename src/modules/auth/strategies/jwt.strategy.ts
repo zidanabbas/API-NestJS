@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
-import type { UserRole } from '@/generated/prisma/enums.js';
+import type { UserRole } from '#app/generated/prisma/enums.js';
 
 export interface JwtPayload {
   sub: number;

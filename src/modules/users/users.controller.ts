@@ -9,7 +9,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard.js';
+import { JwtAuthGuard } from '#app/modules/auth/guards/jwt-auth.guard.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UserResponseDto } from './dto/user-response.dto.js';
 import { UsersService } from './users.service.js';
