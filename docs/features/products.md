@@ -77,8 +77,10 @@ Setiap response produk (single maupun list) menyertakan relasi `category` secara
 {
   "success": false,
   "statusCode": 404,
-  "timestamp": "2026-08-13T02:00:00.000Z",
-  "message": "Category not found"
+  "error": "Not Found",
+  "message": "Category not found",
+  "path": "/api/v1/products",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 
@@ -96,8 +98,10 @@ Setiap response produk (single maupun list) menyertakan relasi `category` secara
 {
   "success": false,
   "statusCode": 404,
-  "timestamp": "2026-08-13T02:00:00.000Z",
-  "message": "Product not found"
+  "error": "Not Found",
+  "message": "Product not found",
+  "path": "/api/v1/products/99",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 
@@ -138,14 +142,14 @@ Setiap response produk (single maupun list) menyertakan relasi `category` secara
 | [dto/create-product.dto.ts](../../src/modules/products/dto/create-product.dto.ts) | Validasi request create |
 | [dto/update-product.dto.ts](../../src/modules/products/dto/update-product.dto.ts) | `PartialType(CreateProductDto)` |
 | [dto/query-product.dto.ts](../../src/modules/products/dto/query-product.dto.ts) | **Kosong** — placeholder untuk query filter/pagination di masa depan, belum diimplementasikan/dipakai |
-| [dto/product-response.dto.ts](../../src/modules/products/dto/product-response.dto.ts) | **Kosong** — placeholder untuk typed response DTO, belum diimplementasikan/dipakai |
+| [dto/product-response.dto.ts](../../src/modules/products/dto/product-response.dto.ts) | Shape response (termasuk relasi `category`) untuk dokumentasi Swagger via `@ApiOkData`/`@ApiCreatedData` |
 
 `ProductsModule` meng-import `CategoriesModule` agar `CategoriesRepository` bisa di-inject ke `ProductsService` untuk validasi relasi ([products.module.ts](../../src/modules/products/products.module.ts)).
 
 ## Catatan & Batasan Saat Ini
 
-- Controller ini sudah memiliki `@ApiTags('Products')` beserta `@ApiOperation` dan anotasi response (`@ApiOkResponse`, `@ApiCreatedResponse`, `@ApiNotFoundResponse`), sehingga endpoint produk tampil dan terkelompok rapi di Swagger UI (`/docs`).
+- Controller ini sudah memiliki `@ApiTags('Products')` beserta `@ApiOperation`. Response sukses memakai `@ApiOkData(ProductResponseDto)` / `@ApiCreatedData(ProductResponseDto)` dan response error memakai `type: ErrorResponseDto`, sehingga bentuk envelope `{ success, data }` dan skema error tampil akurat di Swagger UI (`/docs`).
 - **Tidak ada guard autentikasi** pada endpoint tulis (`POST`, `PATCH`, `DELETE`) — sama seperti [categories](categories.md), siapa pun bisa mengubah data produk tanpa login.
 - **Belum ada filter/pagination**: `GET /api/v1/products` selalu mengembalikan seluruh baris. File [`query-product.dto.ts`](../../src/modules/products/dto/query-product.dto.ts) sudah disiapkan namanya tapi isinya masih kosong — kandidat kuat untuk menambahkan query seperti `?categoryId=`, `?search=`, `?page=&limit=`.
-- `product-response.dto.ts` juga masih kosong — response saat ini adalah hasil mentah Prisma (termasuk field seperti `isActive` yang belum bisa diubah user), bukan DTO yang dikurasi eksplisit.
+- `product-response.dto.ts` kini **sudah terisi dan dipakai** untuk mendokumentasikan bentuk response di Swagger. Perlu dicatat: DTO ini hanya untuk **dokumentasi** — response runtime tetap hasil mentah Prisma (tidak ada transformasi/serialization ulang), sehingga field seperti `isActive` tetap ikut terkirim apa adanya.
 - Validasi stok kini dilakukan oleh module [`orders`](orders.md) saat pesanan dibuat (`stock` produk dicek lalu di-`decrement` dalam satu transaksi), bukan oleh module `products` itu sendiri. Namun endpoint `products` di sini masih membolehkan `stock` diubah bebas via `PATCH` tanpa memperhitungkan pesanan berjalan.

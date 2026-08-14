@@ -45,6 +45,7 @@ erDiagram
         string customerPhone
         decimal totalAmount
         OrderStatus status
+        int tableId FK "nullable"
         datetime createdAt
         datetime updatedAt
     }
@@ -73,10 +74,21 @@ erDiagram
         datetime updatedAt
     }
 
+    Table {
+        int id PK
+        string code UK
+        int number UK
+        string name
+        boolean isActive
+        datetime createdAt
+        datetime updatedAt
+    }
+
     Category ||--o{ Product : "memiliki"
     Product  ||--o{ OrderItem : "dipesan dalam"
     Order    ||--o{ OrderItem : "berisi"
     Order    ||--o| Payment : "dibayar via"
+    Table    ||--o{ Order : "menaungi"
 ```
 
 > Catatan: `User` belum punya relasi langsung ke `Order` di skema saat ini — data pemesan disimpan sebagai `customerName` / `customerPhone` bebas di tabel `Order`, bukan foreign key ke `User`.
@@ -136,6 +148,8 @@ Lihat [features/products.md](features/products.md).
 | `status` | `OrderStatus` | `PENDING` (default) → `CONFIRMED` → `PREPARING` → `READY` → `COMPLETED`, atau `CANCELLED` |
 | `items` | `OrderItem[]` | |
 | `payment` | `Payment?` | Relasi one-to-one opsional |
+| `tableId` | `Int?` (FK → `Table.id`) | Opsional — meja tempat pesanan dibuat (dine-in). `null` untuk pesanan tanpa meja (mis. take-away) |
+| `table` | `Table?` | Relasi many-to-one opsional ke `Table` |
 
 Lihat [features/orders.md](features/orders.md).
 
@@ -151,6 +165,24 @@ Lihat [features/orders.md](features/orders.md).
 | `quantity` | `Int` | |
 | `price` | `Decimal(12,2)` | Harga produk saat pesanan dibuat (snapshot, agar tidak berubah jika harga produk berubah kemudian) |
 | `subtotal` | `Decimal(12,2)` | `price * quantity` |
+
+### `Table`
+
+Merepresentasikan meja fisik untuk pesanan dine-in. Satu meja bisa menaungi banyak `Order`.
+
+| Field | Tipe | Keterangan |
+| ----- | ---- | ---------- |
+| `id` | `Int` (PK, autoincrement) | |
+| `code` | `String` (unique) | Kode unik meja, di-generate otomatis oleh server (tidak pernah input manual) — dirancang untuk di-encode sebagai QR code di meja. Lihat [features/tables.md](features/tables.md#business-rules) |
+| `number` | `Int` (unique) | Nomor meja untuk staff; wajib unik. Bila tidak dikirim saat create, di-auto-increment oleh server |
+| `name` | `String` | Nama/label meja (mis. `"Meja 1"`, `"VIP 2"`) |
+| `isActive` | `Boolean` | Default `true`. Kolom tersedia di skema, belum diekspos lewat DTO/endpoint |
+| `orders` | `Order[]` | Relasi one-to-many ke `Order` |
+| `createdAt` / `updatedAt` | `DateTime` | Auto-managed Prisma |
+
+Lihat [features/tables.md](features/tables.md).
+
+> Relasi `Order.tableId` bersifat opsional (`ON DELETE SET NULL`), jadi order tetap bisa dibuat tanpa mengisi meja (mis. order lewat scan QR menu umum, bukan QR yang menempel di meja tertentu).
 
 ### `Payment` *(skema siap, endpoint belum dibuat)*
 
@@ -174,17 +206,20 @@ Lihat [features/orders.md](features/orders.md).
 | `PaymentStatus` | `PENDING`, `PAID`, `FAILED`, `EXPIRED`, `REFUNDED` |
 | `PaymentMethod` | `QRIS` |
 
-## Roadmap Order & Payment
+## Roadmap Order, Table & Payment
 
-Module **`orders` sudah diimplementasikan** (`Controller → Service → Repository`, terdaftar di [app.module.ts](../src/app.module.ts)) — mencakup pembuatan order + order items dalam satu transaksi, perhitungan `totalAmount`, dan pengurangan `stock`. Lihat [features/orders.md](features/orders.md).
+Module **`orders` sudah diimplementasikan** (`Controller → Service → Repository`, terdaftar di [app.module.ts](../src/app.module.ts)) — mencakup pembuatan order + order items dalam satu transaksi, perhitungan `totalAmount`, pengurangan `stock`, dan pengaitan opsional ke `Table` lewat `tableCode`. Lihat [features/orders.md](features/orders.md).
+
+Module **`tables` sudah diimplementasikan** — CRUD meja lengkap termasuk generate `code` otomatis (untuk QR) dan auto-increment `number`. Lihat [features/tables.md](features/tables.md).
 
 Yang **masih menjadi pengembangan berikutnya**:
 
 - `PATCH /api/v1/orders/:id/status` — mengubah status order (`updateStatus` sudah ada di repository tetapi belum terekspos).
-- Filter/pagination untuk `GET /api/v1/orders`.
+- Filter/pagination untuk `GET /api/v1/orders` dan `GET /api/v1/tables`.
 - **Module `payments`** — model `Payment` **sudah ada di skema** tetapi **belum memiliki module NestJS** (tidak ada folder `src/modules/payments`). Rencana endpoint:
   - `POST /api/v1/orders/:id/payment` — generate QRIS payment.
   - Webhook/endpoint untuk update `PaymentStatus` dari payment gateway.
+- **Endpoint generate gambar QR meja** — module `tables` saat ini hanya menyediakan `code` sebagai string; encoding jadi gambar QR (dan embed `code` ke URL frontend) belum jadi bagian API ini.
 
 ## Prisma Client
 
@@ -200,3 +235,12 @@ npx prisma migrate deploy   # apply migrasi tanpa prompt (production/CI)
 npx prisma studio           # GUI untuk browse/edit data
 npx prisma generate         # generate ulang Prisma Client
 ```
+
+> ⚠️ **Koneksi untuk migrasi.** Proyek ini memakai Supabase dengan dua connection string (lihat [`.env`](../.env)):
+>
+> | Variable | Port | Mode | Dipakai |
+> | -------- | ---- | ---- | ------- |
+> | `DATABASE_URL` | `6543` | transaction pooler (PgBouncer) | Runtime NestJS ([prisma.service.ts](../src/database/prisma.service.ts) via `@prisma/adapter-pg`) |
+> | `DIRECT_URL` | `5432` | session pooler / direct | **Migrasi & DDL** ([prisma.config.ts](../prisma.config.ts)) |
+>
+> Prisma CLI (`migrate`, `db push`, `studio`) memakai `DIRECT_URL` yang di-set di [prisma.config.ts](../prisma.config.ts). **Jangan** arahkan migrasi ke pooler transaction-mode (`6543`) — DDL, advisory lock, dan shadow database tidak bekerja lewat pooler tersebut sehingga `migrate` akan **menggantung/sangat lambat**.

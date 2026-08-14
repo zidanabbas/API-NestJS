@@ -50,14 +50,16 @@ Mengelola registrasi user dan daftar user terdaftar. Password di-hash dengan `bc
 {
   "success": false,
   "statusCode": 409,
-  "timestamp": "2026-08-13T02:00:00.000Z",
-  "message": "Email already registered"
+  "error": "Conflict",
+  "message": "Email already registered",
+  "path": "/api/v1/users",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 
 ### `GET /api/v1/users` 🔒 — Daftar User
 
-Membutuhkan header `Authorization: Bearer <accessToken>` (lihat [features/auth.md](auth.md)).
+Membutuhkan login — cookie `access_token` (httpOnly) dikirim otomatis oleh browser setelah login (lihat [features/auth.md](auth.md)).
 
 **Response `200 OK`**:
 
@@ -82,8 +84,10 @@ Membutuhkan header `Authorization: Bearer <accessToken>` (lihat [features/auth.m
 {
   "success": false,
   "statusCode": 401,
-  "timestamp": "2026-08-13T02:00:00.000Z",
-  "message": "Unauthorized"
+  "error": "Unauthorized",
+  "message": "Unauthorized",
+  "path": "/api/v1/users",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 

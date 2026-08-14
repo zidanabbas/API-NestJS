@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { OrdersRepository } from './orders.repository.js';
 import { CreateOrderDto } from './dto/create-order.dto.js';
+import { TablesRepository } from '#app/modules/tables/tables.repository.js';
 
 @Injectable()
 export class OrdersService {
@@ -14,9 +15,13 @@ export class OrdersService {
     private readonly prisma: PrismaService,
 
     private readonly ordersRepository: OrdersRepository,
+
+    private readonly tablesRepository: TablesRepository,
   ) {}
 
   async create(dto: CreateOrderDto) {
+    const tableId = await this.resolveTableId(dto.tableCode);
+
     return this.prisma.$transaction(async (tx) => {
       let totalAmount = 0;
 
@@ -74,6 +79,12 @@ export class OrdersService {
           items: {
             create: orderItems,
           },
+
+          ...(tableId !== undefined && {
+            table: {
+              connect: { id: tableId },
+            },
+          }),
         },
       );
 
@@ -107,6 +118,26 @@ export class OrdersService {
     }
 
     return order;
+  }
+
+  private async resolveTableId(
+    tableCode?: string,
+  ): Promise<number | undefined> {
+    if (!tableCode) {
+      return undefined;
+    }
+
+    const table = await this.tablesRepository.findByCode(tableCode);
+
+    if (!table) {
+      throw new NotFoundException(`Table with code ${tableCode} not found`);
+    }
+
+    if (!table.isActive) {
+      throw new BadRequestException(`Table ${table.name} is not available`);
+    }
+
+    return table.id;
   }
 
   private generateOrderNumber() {

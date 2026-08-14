@@ -15,6 +15,7 @@ export class OrdersRepository {
             product: true,
           },
         },
+        table: true,
       },
     });
   }
@@ -27,6 +28,7 @@ export class OrdersRepository {
             product: true,
           },
         },
+        table: true,
       },
     });
   }
@@ -41,6 +43,7 @@ export class OrdersRepository {
           },
         },
         payment: true,
+        table: true,
       },
     });
   }

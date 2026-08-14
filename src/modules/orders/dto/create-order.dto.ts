@@ -1,5 +1,6 @@
 import {
   IsNotEmpty,
+  IsOptional,
   IsString,
   ValidateNested,
   ArrayMinSize,
@@ -7,7 +8,7 @@ import {
 } from 'class-validator';
 
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 import { CreateOrderItemDto } from './order-item.dto.js';
 
 export class CreateOrderDto {
@@ -24,6 +25,16 @@ export class CreateOrderDto {
   @IsString()
   @IsNotEmpty()
   customerPhone!: string;
+
+  @ApiPropertyOptional({
+    example: 'a8f3x9',
+    description:
+      'Table QR code. Omit when ordering via the manual menu QR (no table).',
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  tableCode?: string;
 
   @ApiProperty({
     type: () => [CreateOrderItemDto],

@@ -8,7 +8,7 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Health check' })
+  @ApiOperation({ summary: 'API root welcome message' })
   @ApiOkResponse({
     description: 'API is up and running',
     schema: {
@@ -16,7 +16,11 @@ export class AppController {
       required: ['success', 'data'],
       properties: {
         success: { type: 'boolean', example: true },
-        data: { type: 'string', example: 'Hello World!' },
+        data: {
+          type: 'string',
+          example:
+            'Welcome to Food Ordering API visit /docs for the documentation.',
+        },
       },
     },
   })

@@ -17,12 +17,6 @@ export class AuthUserDto {
 }
 
 export class LoginResponseDto {
-  @ApiProperty({
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-    description: 'JWT access token to send as a Bearer token',
-  })
-  accessToken!: string;
-
   @ApiProperty({ type: () => AuthUserDto, description: 'Authenticated user' })
   user!: AuthUserDto;
 }

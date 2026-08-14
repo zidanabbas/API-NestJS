@@ -1,3 +1,5 @@
+import type { Request } from 'express';
+import { ACCESS_TOKEN_COOKIE } from '../auth.cookie.js';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
@@ -27,7 +29,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req: Request) =>
+          (req?.cookies as Record<string, string>)?.[ACCESS_TOKEN_COOKIE] ??
+          null,
+      ]),
       ignoreExpiration: false,
       secretOrKey: secret,
     });

@@ -34,19 +34,27 @@ flowchart TD
     AppModule --> UsersModule
     AppModule --> CategoriesModule
     AppModule --> ProductsModule
+    AppModule --> OrdersModule
+    AppModule --> TablesModule
 
     AuthModule -->|imports| UsersModule
     ProductsModule -->|imports| CategoriesModule
+    OrdersModule -->|imports| PrismaModule
+    OrdersModule -->|imports| TablesModule
 
     PrismaModule -.->|"@Global()"| AuthModule
     PrismaModule -.->|"@Global()"| UsersModule
     PrismaModule -.->|"@Global()"| CategoriesModule
     PrismaModule -.->|"@Global()"| ProductsModule
+    PrismaModule -.->|"@Global()"| OrdersModule
+    PrismaModule -.->|"@Global()"| TablesModule
 ```
 
 - `PrismaModule` ditandai `@Global()` ([prisma.module.ts](../src/database/prisma.module.ts)) sehingga `PrismaService` bisa langsung di-inject di repository module manapun tanpa perlu import ulang.
 - `AuthModule` meng-import `UsersModule` untuk mengecek kredensial user saat login.
 - `ProductsModule` meng-import `CategoriesModule` untuk memvalidasi `categoryId` saat membuat/mengubah produk.
+- `OrdersModule` meng-import `PrismaModule` secara eksplisit ([orders.module.ts](../src/modules/orders/orders.module.ts)) karena `OrdersService` juga menyuntik `PrismaService` langsung untuk menjalankan transaksi lintas tabel.
+- `OrdersModule` meng-import `TablesModule` agar `TablesRepository` bisa di-inject ke `OrdersService` untuk resolve `tableCode` → `tableId` saat membuat order (lihat [features/orders.md](features/orders.md#pengaitan-meja-tablecode)). `TablesModule` meng-`exports` `TablesService` dan `TablesRepository` ([tables.module.ts](../src/modules/tables/tables.module.ts)) untuk keperluan ini.
 
 ## Bootstrap & Global Providers
 
@@ -87,7 +95,7 @@ setupSwagger(app);
 }
 ```
 
-Dokumen fitur di folder ini menampilkan payload `data` apa adanya — ingat untuk membungkusnya dalam `{ success, data }` saat membaca response asli dari API.
+Dokumen fitur di folder ini menampilkan response lengkap termasuk envelope-nya. Di Swagger UI (`/docs`), envelope ini **juga terdokumentasi akurat** berkat decorator kustom `@ApiOkData(Model)` / `@ApiCreatedData(Model)` ([api-data-response.decorator.ts](../src/common/decorators/api-data-response.decorator.ts)) yang menghasilkan skema `{ success, data: <Model> }` — bukan lagi menampilkan DTO telanjang tanpa pembungkus.
 
 ## Format Error
 
@@ -97,28 +105,47 @@ Dokumen fitur di folder ini menampilkan payload `data` apa adanya — ingat untu
 {
   "success": false,
   "statusCode": 404,
-  "timestamp": "2026-08-13T02:00:00.000Z",
-  "message": "Category not found"
+  "error": "Not Found",
+  "message": "Category not found",
+  "path": "/api/v1/categories/99",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 
-- Jika exception adalah `HttpException` (mis. `NotFoundException`, `ConflictException`, `UnauthorizedException`, atau error validasi dari `ValidationPipe`), `statusCode` dan `message` diambil dari exception tersebut. Untuk error validasi, `message` berupa **array string** (satu per field yang gagal validasi).
-- Jika bukan `HttpException` (error tak terduga/bug), `statusCode` menjadi `500` dan `message` menjadi `"Internal server error"`.
-- Error `5xx` dicatat sebagai `logger.error` (dengan stack trace), error `4xx` dicatat sebagai `logger.warn` (tanpa stack trace) agar log tidak penuh noise dari kesalahan input biasa.
+Skema ini juga terdokumentasi di Swagger sebagai [`ErrorResponseDto`](../src/common/dto/error-response.dto.ts) dan dipasang di setiap response error (`@ApiNotFoundResponse({ type: ErrorResponseDto })`, dst).
+
+| Field | Keterangan |
+| ----- | ---------- |
+| `success` | Selalu `false` untuk error |
+| `statusCode` | Kode status HTTP |
+| `error` | Reason phrase HTTP (mis. `"Not Found"`, `"Bad Request"`) — diambil dari exception atau di-derive dari status code |
+| `message` | Pesan yang bisa dibaca manusia: **string** untuk mayoritas error, atau **array string** untuk error validasi (satu per field yang gagal) |
+| `path` | URL request yang memicu error |
+| `timestamp` | Waktu error dalam format ISO |
+
+- Filter **menormalkan** payload exception: `HttpException.getResponse()` yang berupa objek `{ statusCode, message, error }` di-*flatten* sehingga `message` tidak pernah lagi menjadi objek bersarang — hanya string / array string.
+- Jika exception adalah `HttpException` (mis. `NotFoundException`, `ConflictException`, `UnauthorizedException`, atau error validasi `ValidationPipe`), `statusCode`, `message`, dan `error` diambil dari exception tersebut.
+- Jika bukan `HttpException` (error tak terduga/bug), `statusCode` menjadi `500`, `error` menjadi `"Internal Server Error"`, dan `message` menjadi `"Internal server error"`.
+- Error `5xx` dicatat sebagai `logger.error` (dengan stack trace), error `4xx` dicatat sebagai `logger.warn` (dengan pesannya) agar log tidak penuh noise dari kesalahan input biasa.
 
 ## Autentikasi
 
-Autentikasi memakai **JWT Bearer token** via Passport (`passport-jwt`). Detail lengkap ada di [features/auth.md](features/auth.md). Poin penting arsitektur:
+Autentikasi memakai **JWT yang disimpan di httpOnly cookie** via Passport (`passport-jwt`). Detail lengkap ada di [features/auth.md](features/auth.md). Poin penting arsitektur:
 
+- Token diset sebagai cookie `access_token` (httpOnly) saat login dan dibaca kembali dari cookie oleh `JwtStrategy` — bukan dari header `Authorization`. `cookie-parser` dipasang global di [main.ts](../src/main.ts) agar `req.cookies` terisi.
 - `JwtStrategy` ([jwt.strategy.ts](../src/modules/auth/strategies/jwt.strategy.ts)) memvalidasi signature & masa berlaku token, lalu meng-attach `{ userId, email, role }` ke `request.user`.
 - `JwtAuthGuard` ([jwt-auth.guard.ts](../src/modules/auth/guards/jwt-auth.guard.ts)) dipasang per-route dengan `@UseGuards(JwtAuthGuard)` — **bukan** global guard. Artinya setiap route publik secara default kecuali ditandai guard ini secara eksplisit.
-- Saat ini hanya `GET /api/v1/users` yang diproteksi. Module `categories` dan `products` **belum** memasang guard apa pun (lihat catatan di [features/categories.md](features/categories.md) dan [features/products.md](features/products.md)).
+- Saat ini hanya `GET /api/v1/users` yang diproteksi. Module `categories`, `products`, `orders`, dan `tables` **belum** memasang guard apa pun (lihat catatan di [features/categories.md](features/categories.md) dan [features/products.md](features/products.md)).
 
 ## Struktur Folder `src/`
 
 ```
 src/
 ├── common/
+│   ├── decorators/
+│   │   └── api-data-response.decorator.ts  # @ApiOkData / @ApiCreatedData (envelope Swagger)
+│   ├── dto/
+│   │   └── error-response.dto.ts           # Schema error standar untuk Swagger
 │   ├── filter/http-exception.filter.ts       # Global exception filter
 │   ├── interceptors/response.interceptor.ts  # Global response envelope
 │   └── middleware/logger.middleware.ts       # Request logger
@@ -135,10 +162,12 @@ src/
     ├── auth/
     ├── users/
     ├── categories/
-    └── products/
+    ├── products/
+    ├── orders/
+    └── tables/
 ```
 
-Semua import antar file memakai ekstensi `.js` eksplisit (mis. `from './app.module.js'`) karena proyek berjalan sebagai **ESM murni** (`"type": "module"` di `package.json`, `module: "nodenext"` di `tsconfig.json`). Alias path `@/*` mengarah ke `src/*` (dikonfigurasi di `tsconfig.json` dan di-resolve saat build oleh `tsc-alias`).
+Semua import antar file memakai ekstensi `.js` eksplisit (mis. `from './app.module.js'`) karena proyek berjalan sebagai **ESM murni** (`"type": "module"` di `package.json`, `module: "nodenext"` di `tsconfig.json`). Untuk import lintas folder tanpa jalur relatif dalam (`../../`), proyek memakai **Node.js subpath imports**: prefix `#app/*` (didefinisikan di field `imports` [package.json](../package.json)) menunjuk ke `src/*` saat pengecekan tipe dan `dist/*` saat runtime — mekanisme native Node/TypeScript tanpa perlu `tsc-alias`. Contoh: `import { PrismaService } from '#app/database/prisma.service.js'`.
 
 ## Selanjutnya
 

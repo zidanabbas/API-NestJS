@@ -31,7 +31,7 @@ export class OrdersController {
   @ApiOperation({ summary: 'Create a new order with its items' })
   @ApiCreatedData(OrderResponseDto, { description: 'Order created' })
   @ApiBadRequestResponse({
-    description: 'Product inactive or insufficient stock',
+    description: 'Product inactive, insufficient stock, or table inactive',
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
