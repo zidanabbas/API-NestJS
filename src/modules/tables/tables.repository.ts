@@ -3,12 +3,17 @@ import { Prisma } from '#app/generated/prisma/client.js';
 import { PrismaService } from '#app/database/prisma.service.js';
 import { TableUpdateInput } from '#app/generated/prisma/models.js';
 
+type PrismaClientOrTx = PrismaService | Prisma.TransactionClient;
+
 @Injectable()
 export class TablesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(data: Prisma.TableCreateInput) {
-    return this.prisma.table.create({
+  create(
+    data: Prisma.TableCreateInput,
+    client: PrismaClientOrTx = this.prisma,
+  ) {
+    return client.table.create({
       data,
     });
   }
@@ -21,48 +26,52 @@ export class TablesRepository {
     });
   }
 
-  findById(id: number) {
-    return this.prisma.table.findUnique({
+  findById(id: number, client: PrismaClientOrTx = this.prisma) {
+    return client.table.findUnique({
       where: { id },
     });
   }
 
-  findByCode(code: string) {
-    return this.prisma.table.findUnique({
+  findByCode(code: string, client: PrismaClientOrTx = this.prisma) {
+    return client.table.findUnique({
       where: { code },
     });
   }
 
-  findByNumber(number: number) {
-    return this.prisma.table.findUnique({
+  findByNumber(number: number, client: PrismaClientOrTx = this.prisma) {
+    return client.table.findUnique({
       where: { number },
     });
   }
 
   // Used to auto-assign the next table number when the caller doesn't pick one.
-  findLastByNumber() {
-    return this.prisma.table.findFirst({
+  findLastByNumber(client: PrismaClientOrTx = this.prisma) {
+    return client.table.findFirst({
       orderBy: { number: 'desc' },
       select: { number: true },
     });
   }
 
-  update(id: number, data: TableUpdateInput) {
-    return this.prisma.table.update({
+  update(
+    id: number,
+    data: TableUpdateInput,
+    client: PrismaClientOrTx = this.prisma,
+  ) {
+    return client.table.update({
       where: { id },
       data,
     });
   }
 
-  delete(id: number) {
-    return this.prisma.table.delete({
+  delete(id: number, client: PrismaClientOrTx = this.prisma) {
+    return client.table.delete({
       where: { id },
     });
   }
 
   // Used to block deletion of a table that still has orders (avoids raw FK errors).
-  countOrders(tableId: number) {
-    return this.prisma.order.count({
+  countOrders(tableId: number, client: PrismaClientOrTx = this.prisma) {
+    return client.order.count({
       where: { tableId },
     });
   }

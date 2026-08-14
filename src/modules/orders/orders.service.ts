@@ -133,6 +133,10 @@ export class OrdersService {
       throw new NotFoundException(`Table with code ${tableCode} not found`);
     }
 
+    if (!table.isActive) {
+      throw new BadRequestException(`Table ${table.name} is not available`);
+    }
+
     return table.id;
   }
 
