@@ -7,8 +7,16 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiNotFoundResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+
+import {
+  ApiCookieAuth,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import {
   ApiCreatedData,
@@ -19,6 +27,10 @@ import { ProductsService } from './products.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { ProductResponseDto } from './dto/product-response.dto.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '#app/generated/prisma/enums.js';
 
 @ApiTags('Products')
 @Controller('products')
@@ -26,8 +38,15 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new product' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Create a new product (ADMIN ONLY)' })
   @ApiCreatedData(ProductResponseDto, { description: 'Product created' })
+  @ApiForbiddenResponse({
+    description: 'Requires ADMIN role',
+    type: ErrorResponseDto,
+  })
   @ApiNotFoundResponse({
     description: 'Category not found',
     type: ErrorResponseDto,
