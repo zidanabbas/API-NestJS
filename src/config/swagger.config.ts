@@ -4,7 +4,19 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 export function setupSwagger(app: INestApplication): void {
   const config = new DocumentBuilder()
     .setTitle('Food Ordering API')
-    .setDescription('REST API for Food Ordering System')
+    .setDescription(
+      [
+        'REST API for a food ordering & dine-in table management system.',
+        '',
+        'Covers the full ordering flow: product catalog (categories & products), ',
+        'customer orders with line items and stock control, dine-in tables, and payments.',
+        '',
+        '**Authentication:** JWT Bearer token — click **Authorize** and paste your access token.',
+        '',
+        '**Response format:** successful responses are wrapped as `{ success: true, data }`; ',
+        'errors follow `{ success: false, statusCode, error, message, path, timestamp }`.',
+      ].join('\n'),
+    )
     .setVersion('1.0')
     .addTag('App', 'Health check & general endpoints')
     .addTag('Auth', 'Authentication & login')
@@ -12,6 +24,7 @@ export function setupSwagger(app: INestApplication): void {
     .addTag('Categories', 'Product categories (CRUD)')
     .addTag('Products', 'Products (CRUD)')
     .addTag('Orders', 'Orders & order items')
+    .addTag('Tables', 'Dine-in tables (CRUD)')
     .addBearerAuth()
     .build();
 

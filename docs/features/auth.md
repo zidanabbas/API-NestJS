@@ -37,7 +37,7 @@ sequenceDiagram
 
 Login menggunakan email & password, mengembalikan JWT access token.
 
-**Request body** ([LoginDto](../../src/modules/auth/dto/login-dto.ts)):
+**Request body** ([LoginDto](../../src/modules/auth/dto/login.dto.ts)):
 
 ```json
 {
@@ -83,7 +83,7 @@ Login menggunakan email & password, mengembalikan JWT access token.
 
 ## JWT Payload
 
-Token berisi payload berikut (lihat `AuthService.login` di [auth-service.ts](../../src/modules/auth/auth-service.ts)):
+Token berisi payload berikut (lihat `AuthService.login` di [auth.service.ts](../../src/modules/auth/auth.service.ts)):
 
 ```json
 {
@@ -119,11 +119,11 @@ Di Swagger UI (`/docs`), klik tombol **Authorize** dan masukkan `<accessToken>` 
 
 | File | Peran |
 | ---- | ----- |
-| [auth-controller.ts](../../src/modules/auth/auth-controller.ts) | Endpoint `POST /auth/login` |
-| [auth-service.ts](../../src/modules/auth/auth-service.ts) | Verifikasi kredensial (`bcrypt.compare`) & sign JWT |
+| [auth.controller.ts](../../src/modules/auth/auth.controller.ts) | Endpoint `POST /auth/login` |
+| [auth.service.ts](../../src/modules/auth/auth.service.ts) | Verifikasi kredensial (`bcrypt.compare`) & sign JWT |
 | [strategies/jwt.strategy.ts](../../src/modules/auth/strategies/jwt.strategy.ts) | Memvalidasi token dari header `Authorization: Bearer`, meng-extract payload menjadi `request.user = { userId, email, role }` |
 | [guards/jwt-auth.guard.ts](../../src/modules/auth/guards/jwt-auth.guard.ts) | Guard (`AuthGuard('jwt')`) yang dipasang manual per-route via `@UseGuards(JwtAuthGuard)` |
-| [dto/login-dto.ts](../../src/modules/auth/dto/login-dto.ts) | Validasi request body |
+| [dto/login.dto.ts](../../src/modules/auth/dto/login.dto.ts) | Validasi request body |
 
 ## Catatan & Batasan Saat Ini
 

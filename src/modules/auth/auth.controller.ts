@@ -7,9 +7,9 @@ import {
 
 import { ApiOkData } from '#app/common/decorators/api-data-response.decorator.js';
 import { ErrorResponseDto } from '#app/common/dto/error-response.dto.js';
-import { LoginDto } from './dto/login-dto.js';
-import { LoginResponseDto } from './dto/login-response.dto.js';
-import { AuthService } from './auth-service.js';
+import { LoginDto } from './dto/login.dto.js';
+import { LoginResponseDto } from './dto/login.response.dto.js';
+import { AuthService } from './auth.service.js';
 
 @ApiTags('Auth')
 @Controller({ path: 'auth', version: '1' })
