@@ -121,6 +121,6 @@ npm run format  # prettier --write
 | App gagal start dengan error `JWT_SECRET is not configured` | `.env` belum dibuat atau `JWT_SECRET` kosong | Isi `JWT_SECRET` di `.env` |
 | Error koneksi database saat start / migrate | `DATABASE_URL` salah atau PostgreSQL belum jalan | Cek kredensial & pastikan service PostgreSQL aktif |
 | Tipe Prisma (`#app/generated/prisma/...`) tidak ditemukan setelah ubah schema | Prisma Client belum di-generate ulang | Jalankan `npx prisma generate` |
-| Route mengembalikan 401 padahal sudah login | Header `Authorization` tidak berformat `Bearer <token>`, atau token sudah expired | Login ulang, cek format header |
+| Route mengembalikan 401 padahal sudah login | Cookie `access_token` tidak terkirim (request tanpa `credentials`/cookie jar) atau token sudah expired | Login ulang; pastikan request menyertakan cookie (browser otomatis; `curl` pakai `-b cookies.txt`) |
 
 Lanjut ke [architecture.md](architecture.md) untuk memahami struktur aplikasi secara menyeluruh.

@@ -27,7 +27,7 @@ Selamat datang di dokumentasi teknis Food Ordering API. Gunakan daftar di bawah 
 
 - Semua contoh request/response memakai base path `http://localhost:3000` sesuai default `PORT`.
 - Body request & response ditulis sebagai JSON mentah (payload asli). Perlu diingat bahwa aplikasi membungkus **setiap** response sukses dengan `{ success: true, data: ... }` melalui `ResponseInterceptor` — lihat [architecture.md](architecture.md#response-envelope).
-- Endpoint yang butuh login ditandai badge 🔒 dan memerlukan header `Authorization: Bearer <accessToken>`.
+- Endpoint yang butuh login ditandai badge 🔒 dan memerlukan cookie `access_token` (httpOnly) yang diset saat login.
 - Kode status & pesan error mengikuti format `HttpExceptionFilter` (`{ success, statusCode, error, message, path, timestamp }`) — lihat [architecture.md](architecture.md#format-error). Envelope sukses & schema error keduanya terdokumentasi di Swagger UI (`/docs`).
 
 ## Referensi Cepat

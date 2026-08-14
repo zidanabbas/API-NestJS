@@ -130,11 +130,12 @@ Skema ini juga terdokumentasi di Swagger sebagai [`ErrorResponseDto`](../src/com
 
 ## Autentikasi
 
-Autentikasi memakai **JWT Bearer token** via Passport (`passport-jwt`). Detail lengkap ada di [features/auth.md](features/auth.md). Poin penting arsitektur:
+Autentikasi memakai **JWT yang disimpan di httpOnly cookie** via Passport (`passport-jwt`). Detail lengkap ada di [features/auth.md](features/auth.md). Poin penting arsitektur:
 
+- Token diset sebagai cookie `access_token` (httpOnly) saat login dan dibaca kembali dari cookie oleh `JwtStrategy` — bukan dari header `Authorization`. `cookie-parser` dipasang global di [main.ts](../src/main.ts) agar `req.cookies` terisi.
 - `JwtStrategy` ([jwt.strategy.ts](../src/modules/auth/strategies/jwt.strategy.ts)) memvalidasi signature & masa berlaku token, lalu meng-attach `{ userId, email, role }` ke `request.user`.
 - `JwtAuthGuard` ([jwt-auth.guard.ts](../src/modules/auth/guards/jwt-auth.guard.ts)) dipasang per-route dengan `@UseGuards(JwtAuthGuard)` — **bukan** global guard. Artinya setiap route publik secara default kecuali ditandai guard ini secara eksplisit.
-- Saat ini hanya `GET /api/v1/users` yang diproteksi. Module `categories` dan `products` **belum** memasang guard apa pun (lihat catatan di [features/categories.md](features/categories.md) dan [features/products.md](features/products.md)).
+- Saat ini hanya `GET /api/v1/users` yang diproteksi. Module `categories`, `products`, `orders`, dan `tables` **belum** memasang guard apa pun (lihat catatan di [features/categories.md](features/categories.md) dan [features/products.md](features/products.md)).
 
 ## Struktur Folder `src/`
 

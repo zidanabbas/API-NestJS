@@ -59,7 +59,7 @@ Mengelola registrasi user dan daftar user terdaftar. Password di-hash dengan `bc
 
 ### `GET /api/v1/users` 🔒 — Daftar User
 
-Membutuhkan header `Authorization: Bearer <accessToken>` (lihat [features/auth.md](auth.md)).
+Membutuhkan login — cookie `access_token` (httpOnly) dikirim otomatis oleh browser setelah login (lihat [features/auth.md](auth.md)).
 
 **Response `200 OK`**:
 
