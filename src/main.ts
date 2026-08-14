@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser';
 import { RequestMethod, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -12,8 +13,19 @@ import { setupSwagger } from './config/swagger.config.js';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  app.enableCors();
+
+  const corsOrigin = configService.get<string>('app.corsOrigin');
+  app.enableCors({
+    origin: corsOrigin
+      ? corsOrigin
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : true,
+    credentials: true,
+  });
   app.use(helmet());
+  app.use(cookieParser());
   app.setGlobalPrefix('api', {
     exclude: [{ path: '/', method: RequestMethod.GET }],
   });

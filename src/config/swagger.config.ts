@@ -25,7 +25,7 @@ export function setupSwagger(app: INestApplication): void {
     .addTag('Products', 'Products (CRUD)')
     .addTag('Orders', 'Orders & order items')
     .addTag('Tables', 'Dine-in tables (CRUD)')
-    .addBearerAuth()
+    .addCookieAuth('access_token')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

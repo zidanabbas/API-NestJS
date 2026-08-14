@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import {
-  ApiBearerAuth,
+  ApiCookieAuth,
   ApiConflictResponse,
   ApiOperation,
   ApiTags,
@@ -24,7 +24,7 @@ export class UsersController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiCookieAuth()
   @ApiOperation({ summary: 'Get all registered users (requires login)' })
   @ApiOkData(UserResponseDto, { isArray: true, description: 'List of users' })
   @ApiUnauthorizedResponse({

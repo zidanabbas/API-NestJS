@@ -1,4 +1,10 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Res } from '@nestjs/common';
+import type { Response } from 'express';
+import {
+  ACCESS_TOKEN_COOKIE,
+  accessTokenCookieOptions,
+} from './auth.cookie.js';
+
 import {
   ApiOperation,
   ApiTags,
@@ -23,7 +29,19 @@ export class AuthController {
     description: 'Invalid email or password',
     type: ErrorResponseDto,
   })
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { accessToken, user } = await this.authService.login(dto);
+    res.cookie(ACCESS_TOKEN_COOKIE, accessToken, accessTokenCookieOptions());
+    return { user };
+  }
+
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout and clear auth cookie' })
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie(ACCESS_TOKEN_COOKIE, { path: '/' });
+    return { message: 'berhasil logout' };
   }
 }
