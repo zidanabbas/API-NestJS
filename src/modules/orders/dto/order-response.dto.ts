@@ -6,6 +6,7 @@ import {
   PaymentStatus,
 } from '#app/generated/prisma/enums.js';
 import { ProductResponseDto } from '#app/modules/products/dto/product-response.dto.js';
+import { TableResponseDto } from '#app/modules/tables/dto/table-response.dto.js';
 
 export class OrderItemResponseDto {
   @ApiProperty({ example: 1 })
@@ -98,6 +99,14 @@ export class PaymentResponseDto {
 export class OrderResponseDto {
   @ApiProperty({ example: 1 })
   id!: number;
+
+  @ApiProperty({
+    type: () => TableResponseDto,
+    nullable: true,
+    description:
+      'Table the order was placed from. Null when ordered via the manual menu QR (no table).',
+  })
+  table!: TableResponseDto | null;
 
   @ApiProperty({ example: 'ORD-20260814-0001' })
   orderNumber!: string;

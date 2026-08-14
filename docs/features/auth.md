@@ -74,8 +74,10 @@ Login menggunakan email & password, mengembalikan JWT access token.
 {
   "success": false,
   "statusCode": 401,
-  "timestamp": "2026-08-13T02:00:00.000Z",
-  "message": "Invalid email or password"
+  "error": "Unauthorized",
+  "message": "Invalid email or password",
+  "path": "/api/v1/auth/login",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 

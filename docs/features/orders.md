@@ -94,8 +94,10 @@ Beberapa hal penting pada response ini:
 {
   "success": false,
   "statusCode": 404,
-  "timestamp": "2026-08-14T02:00:00.000Z",
-  "message": "Product 99 not found"
+  "error": "Not Found",
+  "message": "Product 99 not found",
+  "path": "/api/v1/orders",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 
@@ -105,8 +107,10 @@ Beberapa hal penting pada response ini:
 {
   "success": false,
   "statusCode": 400,
-  "timestamp": "2026-08-14T02:00:00.000Z",
-  "message": "Insufficient stock for Nasi Goreng Spesial"
+  "error": "Bad Request",
+  "message": "Insufficient stock for Nasi Goreng Spesial",
+  "path": "/api/v1/orders",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 
@@ -126,8 +130,10 @@ Beberapa hal penting pada response ini:
 {
   "success": false,
   "statusCode": 404,
-  "timestamp": "2026-08-14T02:00:00.000Z",
-  "message": "Order not found"
+  "error": "Not Found",
+  "message": "Order not found",
+  "path": "/api/v1/orders/99",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 
@@ -153,13 +159,14 @@ Jika langkah mana pun melempar error, transaksi otomatis **rollback** — tidak 
 | [orders.repository.ts](../../src/modules/orders/orders.repository.ts)       | Query Prisma (`create` menerima `tx`, `findAll`, `findById`, `updateStatus`) |
 | [dto/create-order.dto.ts](../../src/modules/orders/dto/create-order.dto.ts) | Validasi request create (termasuk nested `items`)                            |
 | [dto/order-item.dto.ts](../../src/modules/orders/dto/order-item.dto.ts)     | Validasi tiap elemen `items` (`productId`, `quantity`)                       |
+| [dto/order-response.dto.ts](../../src/modules/orders/dto/order-response.dto.ts) | Shape response (`OrderResponseDto`, `OrderItemResponseDto`, `PaymentResponseDto`) untuk dokumentasi Swagger |
 
 Catatan implementasi:
 
 - **`OrdersService` meng-inject `PrismaService` langsung** (selain `OrdersRepository`) karena transaksi membaca/menulis beberapa tabel (`product`, `order`) sekaligus. Ini pengecualian sadar terhadap aturan "hanya repository yang menyentuh database" demi menjaga semua operasi dalam satu `$transaction`.
 - **`OrdersRepository.create` menerima `tx: Prisma.TransactionClient`** sebagai argumen pertama, sehingga penulisan order ikut dalam transaksi yang sama dengan pengurangan stok.
 - **Validasi nested array** memakai `@ValidateNested({ each: true })` + `@Type(() => CreateOrderItemDto)`. Tipe array juga dinyatakan eksplisit di `@ApiProperty({ type: () => [CreateOrderItemDto] })` agar Swagger membaca skema item dengan benar (lihat [Catatan](#catatan--batasan-saat-ini)).
-- **`OrdersModule` meng-import `PrismaModule`** ([order.module.ts](../../src/modules/orders/order.module.ts)).
+- **`OrdersModule` meng-import `PrismaModule`** ([orders.module.ts](../../src/modules/orders/orders.module.ts)).
 
 ## Catatan & Batasan Saat Ini
 

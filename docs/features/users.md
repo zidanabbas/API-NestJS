@@ -50,8 +50,10 @@ Mengelola registrasi user dan daftar user terdaftar. Password di-hash dengan `bc
 {
   "success": false,
   "statusCode": 409,
-  "timestamp": "2026-08-13T02:00:00.000Z",
-  "message": "Email already registered"
+  "error": "Conflict",
+  "message": "Email already registered",
+  "path": "/api/v1/users",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 
@@ -82,8 +84,10 @@ Membutuhkan header `Authorization: Bearer <accessToken>` (lihat [features/auth.m
 {
   "success": false,
   "statusCode": 401,
-  "timestamp": "2026-08-13T02:00:00.000Z",
-  "message": "Unauthorized"
+  "error": "Unauthorized",
+  "message": "Unauthorized",
+  "path": "/api/v1/users",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 

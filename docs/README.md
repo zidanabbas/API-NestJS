@@ -10,7 +10,7 @@ Selamat datang di dokumentasi teknis Food Ordering API. Gunakan daftar di bawah 
 | ------- | --- |
 | [getting-started.md](getting-started.md) | Prasyarat, instalasi, konfigurasi environment, menjalankan aplikasi & test |
 | [architecture.md](architecture.md) | Pola arsitektur (Controller → Service → Repository), alur request, global pipe/filter/interceptor |
-| [database.md](database.md) | Skema Prisma, ERD, penjelasan tiap model & enum, roadmap Order/Payment |
+| [database.md](database.md) | Skema Prisma, ERD, penjelasan tiap model & enum, koneksi migrasi (pooler vs direct), roadmap Order/Payment/Table |
 
 ### Fitur (per module)
 
@@ -27,7 +27,7 @@ Selamat datang di dokumentasi teknis Food Ordering API. Gunakan daftar di bawah 
 - Semua contoh request/response memakai base path `http://localhost:3000` sesuai default `PORT`.
 - Body request & response ditulis sebagai JSON mentah (payload asli). Perlu diingat bahwa aplikasi membungkus **setiap** response sukses dengan `{ success: true, data: ... }` melalui `ResponseInterceptor` — lihat [architecture.md](architecture.md#response-envelope).
 - Endpoint yang butuh login ditandai badge 🔒 dan memerlukan header `Authorization: Bearer <accessToken>`.
-- Kode status & pesan error mengikuti format `HttpExceptionFilter` — lihat [architecture.md](architecture.md#format-error).
+- Kode status & pesan error mengikuti format `HttpExceptionFilter` (`{ success, statusCode, error, message, path, timestamp }`) — lihat [architecture.md](architecture.md#format-error). Envelope sukses & schema error keduanya terdokumentasi di Swagger UI (`/docs`).
 
 ## Referensi Cepat
 

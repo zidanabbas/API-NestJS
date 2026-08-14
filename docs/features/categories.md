@@ -51,8 +51,10 @@ CRUD penuh untuk kategori produk (mis. "Makanan", "Minuman"). Satu kategori bisa
 {
   "success": false,
   "statusCode": 409,
-  "timestamp": "2026-08-13T02:00:00.000Z",
-  "message": "Category already exists"
+  "error": "Conflict",
+  "message": "Category already exists",
+  "path": "/api/v1/categories",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 
@@ -87,8 +89,10 @@ Response `200 OK`, diurutkan dari yang terbaru (`createdAt` descending):
 {
   "success": false,
   "statusCode": 404,
-  "timestamp": "2026-08-13T02:00:00.000Z",
-  "message": "Category not found"
+  "error": "Not Found",
+  "message": "Category not found",
+  "path": "/api/v1/categories/99",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 
@@ -118,8 +122,10 @@ Response `200 OK`, diurutkan dari yang terbaru (`createdAt` descending):
 {
   "success": false,
   "statusCode": 409,
-  "timestamp": "2026-08-13T02:00:00.000Z",
-  "message": "Category still has products and cannot be deleted"
+  "error": "Conflict",
+  "message": "Category still has products and cannot be deleted",
+  "path": "/api/v1/categories/1",
+  "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 
@@ -138,9 +144,10 @@ Response `200 OK`, diurutkan dari yang terbaru (`createdAt` descending):
 | [categories.repository.ts](../../src/modules/categories/categories.repository.ts) | Query Prisma (`create`, `findMany`, `findUnique`, `update`, `delete`, `count`) |
 | [dto/create-category.dto.ts](../../src/modules/categories/dto/create-category.dto.ts) | Validasi request create |
 | [dto/update-category.dto.ts](../../src/modules/categories/dto/update-category.dto.ts) | `PartialType(CreateCategoryDto)` |
+| [dto/category-response.dto.ts](../../src/modules/categories/dto/category-response.dto.ts) | Shape response untuk dokumentasi Swagger (`@ApiOkData`/`@ApiCreatedData`) |
 
 ## Catatan & Batasan Saat Ini
 
-- Controller ini sudah memiliki `@ApiTags('Categories')` beserta `@ApiOperation` dan anotasi response (`@ApiOkResponse`, `@ApiNotFoundResponse`, `@ApiConflictResponse`), sehingga endpoint kategori tampil dan terkelompok rapi di Swagger UI (`/docs`).
+- Controller ini sudah memiliki `@ApiTags('Categories')` beserta `@ApiOperation` dan anotasi response. Response sukses memakai decorator envelope `@ApiOkData(CategoryResponseDto)` / `@ApiCreatedData(CategoryResponseDto)`, sedangkan response error (`@ApiNotFoundResponse`, `@ApiConflictResponse`) memakai `type: ErrorResponseDto` — sehingga bentuk `{ success, data }` dan skema error tampil akurat di Swagger UI (`/docs`).
 - **Tidak ada guard autentikasi** (`JwtAuthGuard`) pada endpoint tulis (`POST`, `PATCH`, `DELETE`) — siapa pun bisa membuat/mengubah/menghapus kategori tanpa login. Jika ingin dibatasi hanya `ADMIN`, tambahkan `@UseGuards(JwtAuthGuard)` (dan role guard bila dibuat) pada method terkait, mengikuti contoh di [UsersController.findAll](../../src/modules/users/users.controller.ts).
 - Kolom `isActive` di model `Category` sudah ada di database namun belum bisa di-set/diubah lewat DTO manapun — kategori baru selalu `isActive: true`.

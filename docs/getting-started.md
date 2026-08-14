@@ -73,15 +73,17 @@ npx prisma migrate deploy  # apply migrasi di production (tanpa prompt)
 ## 4. Jalankan Aplikasi
 
 ```bash
-# development, watch mode (rebuild otomatis)
+# development, watch mode (nest start --watch, incremental)
 npm run start:dev
 
 # development, single run
 npm run start
 
-# debug mode (Node inspector di port 9229)
+# debug mode (nest start --debug --watch, Node inspector)
 npm run start:debug
 ```
+
+> `start:dev` memakai `nest start --watch` (tsc incremental) — hanya meng-compile file yang berubah lalu restart. Tidak ada lagi full rebuild + `tsc-alias` + `nodemon` seperti sebelumnya, sehingga jauh lebih ringan.
 
 Setelah aktif:
 
@@ -92,7 +94,7 @@ Setelah aktif:
 ## 5. Build untuk Production
 
 ```bash
-npm run build      # rimraf dist && nest build && tsc-alias
+npm run build      # nest build (output ke ./dist)
 npm run start:prod # node dist/main
 ```
 
@@ -118,7 +120,7 @@ npm run format  # prettier --write
 | ------ | --------------------- | ------ |
 | App gagal start dengan error `JWT_SECRET is not configured` | `.env` belum dibuat atau `JWT_SECRET` kosong | Isi `JWT_SECRET` di `.env` |
 | Error koneksi database saat start / migrate | `DATABASE_URL` salah atau PostgreSQL belum jalan | Cek kredensial & pastikan service PostgreSQL aktif |
-| Tipe Prisma (`@/generated/prisma/...`) tidak ditemukan setelah ubah schema | Prisma Client belum di-generate ulang | Jalankan `npx prisma generate` |
+| Tipe Prisma (`#app/generated/prisma/...`) tidak ditemukan setelah ubah schema | Prisma Client belum di-generate ulang | Jalankan `npx prisma generate` |
 | Route mengembalikan 401 padahal sudah login | Header `Authorization` tidak berformat `Bearer <token>`, atau token sudah expired | Login ulang, cek format header |
 
 Lanjut ke [architecture.md](architecture.md) untuk memahami struktur aplikasi secara menyeluruh.
