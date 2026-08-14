@@ -1,6 +1,5 @@
 import {
   IsNotEmpty,
-  IsPhoneNumber,
   IsString,
   ValidateNested,
   ArrayMinSize,

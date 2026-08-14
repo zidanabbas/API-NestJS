@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class CreateOrderItemDto {
   @ApiProperty({
     example: 1,
-    description: 'Id Product',
+    description: 'Product ID',
   })
   @IsInt()
   @Min(1)
@@ -12,7 +12,7 @@ export class CreateOrderItemDto {
 
   @ApiProperty({
     example: 2,
-    description: 'Jumlah product',
+    description: 'Product quantity',
   })
   @IsInt()
   @Min(1)
