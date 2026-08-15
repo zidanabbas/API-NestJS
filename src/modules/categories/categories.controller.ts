@@ -7,9 +7,12 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiConflictResponse,
+  ApiCookieAuth,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOperation,
   ApiTags,
@@ -24,6 +27,10 @@ import { CategoriesService } from './categories.service.js';
 import { CreateCategoryDto } from './dto/create-category.dto.js';
 import { UpdateCategoryDto } from './dto/update-category.dto.js';
 import { CategoryResponseDto } from './dto/category-response.dto.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '#app/generated/prisma/enums.js';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -31,8 +38,15 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new category' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Create a new category (ADMIN ONLY)' })
   @ApiCreatedData(CategoryResponseDto, { description: 'Category created' })
+  @ApiForbiddenResponse({
+    description: 'Requires ADMIN role',
+    type: ErrorResponseDto,
+  })
   @ApiConflictResponse({
     description: 'Category name already in use',
     type: ErrorResponseDto,
@@ -63,8 +77,15 @@ export class CategoriesController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update a category' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Update a category (ADMIN ONLY)' })
   @ApiOkData(CategoryResponseDto, { description: 'Category updated' })
+  @ApiForbiddenResponse({
+    description: 'Requires ADMIN role',
+    type: ErrorResponseDto,
+  })
   @ApiNotFoundResponse({
     description: 'Category not found',
     type: ErrorResponseDto,
@@ -81,8 +102,15 @@ export class CategoriesController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a category' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Delete a category (ADMIN ONLY)' })
   @ApiOkData(CategoryResponseDto, { description: 'Category deleted' })
+  @ApiForbiddenResponse({
+    description: 'Requires ADMIN role',
+    type: ErrorResponseDto,
+  })
   @ApiNotFoundResponse({
     description: 'Category not found',
     type: ErrorResponseDto,

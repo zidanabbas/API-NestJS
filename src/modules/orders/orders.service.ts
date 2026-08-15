@@ -89,9 +89,10 @@ export class OrdersService {
       );
 
       for (const item of dto.items) {
-        await tx.product.update({
+        const updated = await tx.product.updateMany({
           where: {
             id: item.productId,
+            stock: { gte: item.quantity },
           },
 
           data: {
@@ -100,6 +101,11 @@ export class OrdersService {
             },
           },
         });
+        if (updated.count === 0) {
+          throw new BadRequestException(
+            `Insufficient stock for product ${item.productId}`,
+          );
+        }
       }
 
       return order;
