@@ -212,7 +212,7 @@ Catatan implementasi:
 
 ## Catatan & Batasan Saat Ini
 
-- **Tidak ada guard autentikasi** — sama seperti [products](products.md) & [categories](categories.md), siapa pun bisa membuat/melihat order tanpa login.
+- **Tidak ada guard autentikasi** — berbeda dari [products](products.md), [categories](categories.md), & [tables](tables.md) yang endpoint tulisnya kini dibatasi `ADMIN`, seluruh endpoint order masih publik: siapa pun bisa membuat/melihat order tanpa login. Perlu keputusan alur bisnis (pelanggan memesan sendiri vs. lewat kasir) sebelum menambah proteksi.
 - **`updateStatus` belum terekspos** — `OrdersRepository.updateStatus` sudah ada, tetapi belum ada service/controller yang memakainya. Jadi belum ada endpoint untuk mengubah status order (mis. `PENDING → CONFIRMED`). Kandidat kuat untuk `PATCH /api/v1/orders/:id/status`.
 - **`GET /orders` tanpa urutan/pagination** — berbeda dengan `products` yang memakai `orderBy: { createdAt: 'desc' }`, `findAll` order belum menetapkan urutan dan selalu mengembalikan seluruh baris.
 - **Potensi race condition stok** — pola "baca stok → cek → kurangi" bisa oversell bila dua order untuk produk sama masuk (nyaris) bersamaan. Untuk beban produksi tinggi perlu penguncian baris atau update bersyarat.

@@ -8,13 +8,13 @@ CRUD penuh untuk kategori produk (mis. "Makanan", "Minuman"). Satu kategori bisa
 
 | Method | Path | Auth | Deskripsi |
 | ------ | ---- | :--: | --------- |
-| `POST`   | `/api/v1/categories` | Publik ⚠️ | Buat kategori baru |
+| `POST`   | `/api/v1/categories` | 🔒 ADMIN | Buat kategori baru |
 | `GET`    | `/api/v1/categories` | Publik | Daftar semua kategori |
 | `GET`    | `/api/v1/categories/:id` | Publik | Detail satu kategori |
-| `PATCH`  | `/api/v1/categories/:id` | Publik ⚠️ | Update kategori |
-| `DELETE` | `/api/v1/categories/:id` | Publik ⚠️ | Hapus kategori |
+| `PATCH`  | `/api/v1/categories/:id` | 🔒 ADMIN | Update kategori |
+| `DELETE` | `/api/v1/categories/:id` | 🔒 ADMIN | Hapus kategori |
 
-> ⚠️ Lihat [Catatan & Batasan](#catatan--batasan-saat-ini) — endpoint tulis (create/update/delete) saat ini **tidak** dilindungi login/role apa pun.
+> 🔒 ADMIN = butuh login **dan** role `ADMIN` (`JwtAuthGuard` + `RolesGuard` + `@Roles(UserRole.ADMIN)`). Tanpa login → `401`, login non-ADMIN → `403 Forbidden`. Endpoint `GET` tetap publik.
 
 ### `POST /api/v1/categories` — Buat Kategori
 
@@ -149,5 +149,5 @@ Response `200 OK`, diurutkan dari yang terbaru (`createdAt` descending):
 ## Catatan & Batasan Saat Ini
 
 - Controller ini sudah memiliki `@ApiTags('Categories')` beserta `@ApiOperation` dan anotasi response. Response sukses memakai decorator envelope `@ApiOkData(CategoryResponseDto)` / `@ApiCreatedData(CategoryResponseDto)`, sedangkan response error (`@ApiNotFoundResponse`, `@ApiConflictResponse`) memakai `type: ErrorResponseDto` — sehingga bentuk `{ success, data }` dan skema error tampil akurat di Swagger UI (`/docs`).
-- **Tidak ada guard autentikasi** (`JwtAuthGuard`) pada endpoint tulis (`POST`, `PATCH`, `DELETE`) — siapa pun bisa membuat/mengubah/menghapus kategori tanpa login. Jika ingin dibatasi hanya `ADMIN`, tambahkan `@UseGuards(JwtAuthGuard)` (dan role guard bila dibuat) pada method terkait, mengikuti contoh di [UsersController.findAll](../../src/modules/users/users.controller.ts).
+- **Endpoint tulis dibatasi role `ADMIN`** (`POST`, `PATCH`, `DELETE`) via `@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles(UserRole.ADMIN)`, terdokumentasi di Swagger dengan `@ApiCookieAuth()` + `@ApiForbiddenResponse()`. Endpoint `GET` tetap publik.
 - Kolom `isActive` di model `Category` sudah ada di database namun belum bisa di-set/diubah lewat DTO manapun — kategori baru selalu `isActive: true`.

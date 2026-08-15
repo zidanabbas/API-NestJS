@@ -11,7 +11,7 @@ export function setupSwagger(app: INestApplication): void {
         'Covers the full ordering flow: product catalog (categories & products), ',
         'customer orders with line items and stock control, dine-in tables, and payments.',
         '',
-        '**Authentication:** JWT Bearer token — click **Authorize** and paste your access token.',
+        '**Authentication:** cookie-based JWT. Login via `POST /api/v1/auth/login` — the access token is set as an httpOnly cookie (`access_token`) and sent automatically on subsequent requests.',
         '',
         '**Response format:** successful responses are wrapped as `{ success: true, data }`; ',
         'errors follow `{ success: false, statusCode, error, message, path, timestamp }`.',

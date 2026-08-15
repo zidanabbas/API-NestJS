@@ -8,14 +8,14 @@ CRUD meja fisik untuk pesanan dine-in. Setiap meja punya `code` unik (dirancang 
 
 | Method   | Path                      |   Auth    | Deskripsi                        |
 | -------- | ------------------------- | :-------: | --------------------------------- |
-| `POST`   | `/api/v1/tables`          | Publik ⚠️ | Buat meja baru                    |
+| `POST`   | `/api/v1/tables`          | 🔒 ADMIN  | Buat meja baru                    |
 | `GET`    | `/api/v1/tables`          |  Publik   | Daftar semua meja                 |
 | `GET`    | `/api/v1/tables/code/:code` | Publik  | Detail meja berdasarkan kode QR   |
 | `GET`    | `/api/v1/tables/:id`      |  Publik   | Detail satu meja (by ID)          |
-| `PATCH`  | `/api/v1/tables/:id`      | Publik ⚠️ | Update meja                       |
-| `DELETE` | `/api/v1/tables/:id`      | Publik ⚠️ | Hapus meja                        |
+| `PATCH`  | `/api/v1/tables/:id`      | 🔒 ADMIN  | Update meja                       |
+| `DELETE` | `/api/v1/tables/:id`      | 🔒 ADMIN  | Hapus meja                        |
 
-> ⚠️ Sama seperti `categories`/`products`, endpoint tulis (create/update/delete) **tidak** dilindungi login/role apa pun.
+> 🔒 ADMIN = butuh login **dan** role `ADMIN` (`JwtAuthGuard` + `RolesGuard` + `@Roles(UserRole.ADMIN)`). Tanpa login → `401`, login non-ADMIN → `403 Forbidden`. Endpoint `GET` (termasuk `/code/:code` untuk scan QR customer) tetap publik.
 
 > Route `GET /tables/code/:code` sengaja didaftarkan **sebelum** `GET /tables/:id` di controller — urutan ini penting di NestJS agar `/tables/code/a8f3x9` tidak tertangkap oleh route `:id` (yang lagipula akan gagal karena `ParseIntPipe` menolak nilai non-angka).
 
@@ -151,6 +151,6 @@ Dipakai frontend saat customer scan QR yang ditempel di meja, untuk resolve `cod
 
 ## Catatan & Batasan Saat Ini
 
-- **Tidak ada guard autentikasi** pada endpoint tulis — siapa pun bisa membuat/mengubah/menghapus meja tanpa login, sama seperti `categories` dan `products`.
+- **Endpoint tulis dibatasi role `ADMIN`** (`POST`, `PATCH`, `DELETE`) via `@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles(UserRole.ADMIN)`, terdokumentasi di Swagger dengan `@ApiCookieAuth()` + `@ApiForbiddenResponse()`. Endpoint `GET` (termasuk `/code/:code`) tetap publik agar customer bisa scan QR tanpa login.
 - **Belum ada endpoint generate/unduh gambar QR** — module ini hanya menyediakan `code` sebagai string; encoding jadi gambar QR (dan embed `code` ke URL frontend) jadi tanggung jawab sisi frontend/aplikasi lain, bukan bagian dari API ini.
 - **`code` di-generate dengan `Math.random()`** (bukan CSPRNG) — cukup untuk kebutuhan saat ini (identifier meja, bukan token keamanan kritis), tapi bukan pilihan kriptografis yang kuat bila suatu saat dipakai untuk hal yang lebih sensitif.
