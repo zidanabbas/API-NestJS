@@ -16,14 +16,18 @@ export class ProductsRepository {
     });
   }
 
-  findAll() {
+  findAll(search?: string) {
     return this.prisma.product.findMany({
-      include: {
-        category: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      where: search
+        ? {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { description: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+        : undefined,
+      include: { category: true },
+      orderBy: { createdAt: 'desc' },
     });
   }
 

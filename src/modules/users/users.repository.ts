@@ -37,4 +37,11 @@ export class UsersRepository {
       select: publicUserSelect,
     });
   }
+
+  findById(id: number) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: publicUserSelect,
+    });
+  }
 }

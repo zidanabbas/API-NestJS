@@ -7,10 +7,13 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 
 import {
   ApiConflictResponse,
+  ApiCookieAuth,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOperation,
   ApiTags,
@@ -26,6 +29,10 @@ import { TablesService } from './tables.service.js';
 import { CreateTableDto } from './dto/create-table.dto.js';
 import { UpdateTableDto } from './dto/update-table.dto.js';
 import { TableResponseDto } from './dto/table-response.dto.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
+import { UserRole } from '#app/generated/prisma/enums.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
 
 @ApiTags('Tables')
 @Controller('tables')
@@ -33,8 +40,15 @@ export class TablesController {
   constructor(private readonly tablesService: TablesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new table' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Create a new table (ADMIN ONLY)' })
   @ApiCreatedData(TableResponseDto, { description: 'Table created' })
+  @ApiForbiddenResponse({
+    description: 'Requires ADMIN role',
+    type: ErrorResponseDto,
+  })
   @ApiConflictResponse({
     description: 'Table number already in use',
     type: ErrorResponseDto,
@@ -76,8 +90,15 @@ export class TablesController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update a table' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Update a table (ADMIN ONLY)' })
   @ApiOkData(TableResponseDto, { description: 'Table updated' })
+  @ApiForbiddenResponse({
+    description: 'Requires ADMIN role',
+    type: ErrorResponseDto,
+  })
   @ApiNotFoundResponse({
     description: 'Table not found',
     type: ErrorResponseDto,
@@ -86,16 +107,20 @@ export class TablesController {
     description: 'Table number already in use',
     type: ErrorResponseDto,
   })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateTableDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTableDto) {
     return this.tablesService.update(id, dto);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a table' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Delete a table (ADMIN ONLY)' })
   @ApiOkData(TableResponseDto, { description: 'Table deleted' })
+  @ApiForbiddenResponse({
+    description: 'Requires ADMIN role',
+    type: ErrorResponseDto,
+  })
   @ApiNotFoundResponse({
     description: 'Table not found',
     type: ErrorResponseDto,

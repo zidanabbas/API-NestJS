@@ -31,8 +31,8 @@ export class ProductsService {
     });
   }
 
-  async findAll() {
-    return this.productsRepository.findAll();
+  async findAll(search?: string) {
+    return this.productsRepository.findAll(search);
   }
 
   async findOne(id: number) {
