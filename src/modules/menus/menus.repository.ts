@@ -16,19 +16,27 @@ export class MenusRepository {
     });
   }
 
-  findAll(search?: string) {
-    return this.prisma.menu.findMany({
-      where: search
-        ? {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { description: { contains: search, mode: 'insensitive' } },
-            ],
-          }
-        : undefined,
-      include: { category: true },
-      orderBy: { createdAt: 'desc' },
-    });
+  findAll(params: { search?: string; page: number; limit: number }) {
+    const { search, page, limit } = params;
+    const where: Prisma.MenuWhereInput | undefined = search
+      ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
+          ],
+        }
+      : undefined;
+
+    return this.prisma.$transaction([
+      this.prisma.menu.findMany({
+        where,
+        include: { category: true },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.menu.count({ where }),
+    ]);
   }
 
   findById(id: number) {

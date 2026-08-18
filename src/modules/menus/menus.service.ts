@@ -3,6 +3,7 @@ import { MenusRepository } from './menus.repository.js';
 import { CategoriesRepository } from '#app/modules/categories/categories.repository.js';
 import { CreateMenuDto } from './dto/create-menu.dto.js';
 import { UpdateMenuDto } from './dto/update-menu.dto.js';
+import { SearchMenuDto } from './dto/query-menu.dto.js';
 
 @Injectable()
 export class MenusService {
@@ -31,8 +32,19 @@ export class MenusService {
     });
   }
 
-  async findAll(search?: string) {
-    return this.menusRepository.findAll(search);
+  async findAll(query: SearchMenuDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+
+    const [items, total] = await this.menusRepository.findAll({
+      search: query.search,
+      page,
+      limit,
+    });
+    return {
+      items,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: number) {

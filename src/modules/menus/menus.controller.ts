@@ -64,7 +64,7 @@ export class MenusController {
     description: 'List of menu items with their category relation',
   })
   findAll(@Query() query: SearchMenuDto) {
-    return this.menusService.findAll(query.search);
+    return this.menusService.findAll(query);
   }
 
   @Get(':id')
