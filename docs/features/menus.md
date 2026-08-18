@@ -9,7 +9,7 @@ CRUD penuh untuk item menu. Setiap item menu wajib terhubung ke satu `Category` 
 | Method   | Path                |   Auth   | Deskripsi                               |
 | -------- | ------------------- | :------: | --------------------------------------- |
 | `POST`   | `/api/v1/menus`     | 🔒 ADMIN | Buat menu baru                          |
-| `GET`    | `/api/v1/menus`     |  Publik  | Daftar semua menu (opsional `?search=`) |
+| `GET`    | `/api/v1/menus`     |  Publik  | Daftar menu (berhalaman; `?search=&page=&limit=`) |
 | `GET`    | `/api/v1/menus/:id` |  Publik  | Detail satu menu                        |
 | `PATCH`  | `/api/v1/menus/:id` | 🔒 ADMIN | Update menu                             |
 | `DELETE` | `/api/v1/menus/:id` | 🔒 ADMIN | Hapus menu                              |
@@ -86,15 +86,33 @@ Setiap response menu (single maupun list) menyertakan relasi `category` secara p
 
 ### `GET /api/v1/menus` — Daftar Menu
 
-**Query params** ([SearchMenuDto](../../src/modules/menus/dto/query-menu.dto.ts)):
+**Query params** ([SearchMenuDto](../../src/modules/menus/dto/query-menu.dto.ts) — `extends` [PaginationQueryDto](../../src/common/dto/pagination-query.dto.ts)):
 
-| Param    | Tipe     | Wajib | Deskripsi                                                                                  |
-| -------- | -------- | :---: | ------------------------------------------------------------------------------------------ |
-| `search` | `string` | tidak | Cari menu yang `name` **atau** `description`-nya mengandung kata kunci (case-insensitive). |
+| Param    | Tipe     | Wajib | Default | Deskripsi                                                                                  |
+| -------- | -------- | :---: | :-----: | ------------------------------------------------------------------------------------------ |
+| `search` | `string` | tidak | —       | Cari menu yang `name` **atau** `description`-nya mengandung kata kunci (case-insensitive). |
+| `page`   | `number` | tidak | `1`     | Halaman (mulai dari 1). Integer ≥ 1.                                                        |
+| `limit`  | `number` | tidak | `10`    | Item per halaman. Integer 1–100 (maks `100`).                                               |
 
-Contoh: `GET /api/v1/menus?search=kopi`.
+Contoh: `GET /api/v1/menus?search=kopi&page=2&limit=5`.
 
-**Response `200 OK`** — array menu (shape sama seperti response create), diurutkan dari yang terbaru (`createdAt` descending). Tanpa `search`, seluruh menu dikembalikan. **Belum ada pagination** — hasil filter tidak dipotong per halaman.
+**Response `200 OK`** — objek berhalaman `{ items, meta }` (bukan array polos), item diurutkan dari yang terbaru (`createdAt` descending):
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      { "id": 1, "name": "Nasi Goreng Spesial", "price": "25000.00", "category": { "id": 1, "name": "Makanan" } }
+    ],
+    "meta": { "total": 42, "page": 2, "limit": 5, "totalPages": 9 }
+  }
+}
+```
+
+- `total` = jumlah item **setelah** filter `search` (dihitung via `menu.count({ where })` yang sama dengan query data).
+- `totalPages` = `ceil(total / limit)`.
+- Data & count dijalankan dalam satu `prisma.$transaction([...])` agar konsisten.
 
 ### `GET /api/v1/menus/:id` — Detail Menu
 
@@ -149,8 +167,11 @@ Contoh: `GET /api/v1/menus?search=kopi`.
 | [menus.repository.ts](../../src/modules/menus/menus.repository.ts)           | Query Prisma (selalu `include: { category: true }`)                                                                |
 | [dto/create-menu.dto.ts](../../src/modules/menus/dto/create-menu.dto.ts)     | Validasi request create                                                                                            |
 | [dto/update-menu.dto.ts](../../src/modules/menus/dto/update-menu.dto.ts)     | `PartialType(CreateMenuDto)`                                                                                       |
-| [dto/query-menu.dto.ts](../../src/modules/menus/dto/query-menu.dto.ts)       | `SearchMenuDto` — query param `search` (opsional) untuk `GET /menus`, sekaligus mendokumentasikan param di Swagger |
-| [dto/menu-response.dto.ts](../../src/modules/menus/dto/menu-response.dto.ts) | Shape response (termasuk relasi `category`) untuk dokumentasi Swagger via `@ApiOkData`/`@ApiCreatedData`           |
+| [dto/query-menu.dto.ts](../../src/modules/menus/dto/query-menu.dto.ts)       | `SearchMenuDto` (extends `PaginationQueryDto`) — query `search` + `page`/`limit` untuk `GET /menus` |
+| [dto/menu-response.dto.ts](../../src/modules/menus/dto/menu-response.dto.ts) | Shape response satu menu (termasuk relasi `category`) untuk Swagger           |
+| [dto/paginated-menu-response.dto.ts](../../src/modules/menus/dto/paginated-menu-response.dto.ts) | `PaginatedMenuResponseDto` (`items` + `meta`) — shape response `GET /menus` di Swagger |
+| [common/dto/pagination-query.dto.ts](../../src/common/dto/pagination-query.dto.ts) | `PaginationQueryDto` generik (`page`/`limit`) — reusable lintas fitur |
+| [common/dto/pagination-meta.dto.ts](../../src/common/dto/pagination-meta.dto.ts) | `PaginationMetaDto` generik (`total`/`page`/`limit`/`totalPages`) |
 
 `MenusModule` meng-import `CategoriesModule` agar `CategoriesRepository` bisa di-inject ke `MenusService` untuk validasi relasi ([menus.module.ts](../../src/modules/menus/menus.module.ts)).
 
@@ -158,7 +179,7 @@ Contoh: `GET /api/v1/menus?search=kopi`.
 
 - Controller ini sudah memiliki `@ApiTags('Menus')` beserta `@ApiOperation`. Response sukses memakai `@ApiOkData(MenuResponseDto)` / `@ApiCreatedData(MenuResponseDto)` dan response error memakai `type: ErrorResponseDto`, sehingga bentuk envelope `{ success, data }` dan skema error tampil akurat di Swagger UI (`/docs`).
 - **Endpoint tulis dibatasi role `ADMIN`** (`POST`, `PATCH`, `DELETE`) via `@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles(UserRole.ADMIN)`, didokumentasikan di Swagger dengan `@ApiCookieAuth()` + `@ApiForbiddenResponse()`. Endpoint `GET` tetap publik.
-- **Pencarian sudah ada, pagination belum**: `GET /api/v1/menus` menerima query `?search=` (lihat [SearchMenuDto](../../src/modules/menus/dto/query-menu.dto.ts)) untuk memfilter berdasarkan `name`/`description`, tetapi hasilnya belum dipotong per halaman — kandidat pengembangan berikutnya: `?categoryId=`, `?page=&limit=`.
+- **Pencarian & pagination sudah ada**: `GET /api/v1/menus` menerima `?search=` (filter `name`/`description`) plus `?page=&limit=` (berhalaman, `skip`/`take` + `count`). DTO query di-*extend* dari `PaginationQueryDto` generik di `common/dto/`, sehingga pola pagination bisa dipakai ulang di fitur lain (mis. `orders`). Kandidat berikutnya: filter `?categoryId=`.
 - `menu-response.dto.ts` kini **sudah terisi dan dipakai** untuk mendokumentasikan bentuk response di Swagger. Perlu dicatat: DTO ini hanya untuk **dokumentasi** — response runtime tetap hasil mentah Prisma (tidak ada transformasi/serialization ulang), sehingga field seperti `isActive` tetap ikut terkirim apa adanya.
 - Validasi stok kini dilakukan oleh module [`orders`](orders.md) saat pesanan dibuat (`stock` menu dicek lalu di-`decrement` dalam satu transaksi), bukan oleh module `menus` itu sendiri. Namun endpoint `menus` di sini masih membolehkan `stock` diubah bebas via `PATCH` tanpa memperhitungkan pesanan berjalan.
 

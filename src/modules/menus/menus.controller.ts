@@ -28,6 +28,7 @@ import { MenusService } from './menus.service.js';
 import { CreateMenuDto } from './dto/create-menu.dto.js';
 import { UpdateMenuDto } from './dto/update-menu.dto.js';
 import { MenuResponseDto } from './dto/menu-response.dto.js';
+import { PaginatedMenuResponseDto } from './dto/paginated-menu-response.dto.js';
 import { SearchMenuDto } from './dto/query-menu.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
@@ -58,10 +59,11 @@ export class MenusController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all menu items (optional ?search=)' })
-  @ApiOkData(MenuResponseDto, {
-    isArray: true,
-    description: 'List of menu items with their category relation',
+  @ApiOperation({
+    summary: 'Get menu items (paginated, optional ?search=&page=&limit=)',
+  })
+  @ApiOkData(PaginatedMenuResponseDto, {
+    description: 'Paginated list of menu items (items + pagination meta)',
   })
   findAll(@Query() query: SearchMenuDto) {
     return this.menusService.findAll(query);
