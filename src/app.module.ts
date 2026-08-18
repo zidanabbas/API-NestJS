@@ -18,6 +18,8 @@ import { TablesModule } from './modules/tables/tables.module.js';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath:
+        process.env.NODE_ENV === 'production' ? '.env' : '.env.local',
       load: [appConfig, databaseConfig, jwtConfig],
     }),
     PrismaModule,
