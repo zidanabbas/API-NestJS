@@ -54,6 +54,12 @@ export class OrdersRepository {
       data: {
         status,
       },
+      include: {
+        items: {
+          include: { product: true },
+        },
+        table: true,
+      },
     });
   }
 }

@@ -1,5 +1,6 @@
 import { PrismaService } from '#app/database/prisma.service.js';
 import { Prisma } from '#app/generated/prisma/client.js';
+import { OrderStatus } from '#app/generated/prisma/enums.js';
 import {
   BadRequestException,
   Injectable,
@@ -8,14 +9,13 @@ import {
 import { OrdersRepository } from './orders.repository.js';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { TablesRepository } from '#app/modules/tables/tables.repository.js';
+import { canTransition } from './constants/order-status.constant.js';
 
 @Injectable()
 export class OrdersService {
   constructor(
     private readonly prisma: PrismaService,
-
     private readonly ordersRepository: OrdersRepository,
-
     private readonly tablesRepository: TablesRepository,
   ) {}
 
@@ -124,6 +124,22 @@ export class OrdersService {
     }
 
     return order;
+  }
+
+  async updateStatus(id: number, newStatus: OrderStatus) {
+    const order = await this.findOne(id);
+
+    if (order.status === newStatus) {
+      throw new BadRequestException(`Order is already ${newStatus}`);
+    }
+
+    if (!canTransition(order.status, newStatus)) {
+      throw new BadRequestException(
+        `Cannot change status from ${order.status} to ${newStatus}`,
+      );
+    }
+
+    return this.ordersRepository.updateStatus(id, newStatus);
   }
 
   private async resolveTableId(

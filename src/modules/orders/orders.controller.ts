@@ -4,11 +4,15 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
+
 import {
   ApiBadRequestResponse,
+  ApiCookieAuth,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOperation,
   ApiTags,
@@ -23,6 +27,10 @@ import { OrdersService } from './orders.service.js';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { OrderResponseDto } from './dto/order-response.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { UpdateOrderStatusDto } from './dto/update-order.dto.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
+import { UserRole } from '#app/generated/prisma/enums.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -66,5 +74,30 @@ export class OrdersController {
   })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.ordersService.findOne(id);
+  }
+
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Update order status (ADMIN ONLY)' })
+  @ApiOkData(OrderResponseDto, { description: 'Order status update' })
+  @ApiForbiddenResponse({
+    description: 'Requires ADMIN role',
+    type: ErrorResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid status transition',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Order not found',
+    type: ErrorResponseDto,
+  })
+  updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateOrderStatusDto,
+  ) {
+    return this.ordersService.updateStatus(id, dto.status);
   }
 }

@@ -8,9 +8,7 @@ import { CategoriesModule } from '#app/modules/categories/categories.module.js';
 
 @Module({
   imports: [CategoriesModule],
-
   controllers: [ProductsController],
-
   providers: [ProductsService, ProductsRepository],
 })
 export class ProductsModule {}
