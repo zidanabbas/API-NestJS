@@ -49,9 +49,9 @@ Login menggunakan email & password. Bila berhasil, server **mengeset cookie `acc
 }
 ```
 
-| Field | Tipe | Validasi |
-| ----- | ---- | -------- |
-| `email` | `string` | wajib, format email valid |
+| Field      | Tipe     | Validasi                  |
+| ---------- | -------- | ------------------------- |
+| `email`    | `string` | wajib, format email valid |
 | `password` | `string` | wajib, tidak boleh kosong |
 
 **Response `201 Created`** — beserta header cookie:
@@ -148,20 +148,20 @@ Di Swagger UI (`/docs`), skema keamanan adalah **cookie** (`access_token`). Saat
 
 ## Implementasi Teknis
 
-| File | Peran |
-| ---- | ----- |
-| [auth.controller.ts](../../src/modules/auth/auth.controller.ts) | Endpoint `login` (set cookie via `res.cookie`, kembalikan `user`) & `logout` (`res.clearCookie`). Memakai `@Res({ passthrough: true })` agar cookie keset tanpa mematikan response envelope |
-| [auth.service.ts](../../src/modules/auth/auth.service.ts) | Verifikasi kredensial (`bcrypt.compare`) & sign JWT. Tetap framework-agnostic — tidak menyentuh cookie/`Response` |
-| [auth.cookie.ts](../../src/modules/auth/auth.cookie.ts) | Konstanta nama cookie `ACCESS_TOKEN_COOKIE` & opsi cookie terpusat (`accessTokenCookieOptions()`) |
-| [strategies/jwt.strategy.ts](../../src/modules/auth/strategies/jwt.strategy.ts) | Meng-extract token dari **cookie** `access_token` (`ExtractJwt.fromExtractors`), memvalidasi, dan mengubah payload menjadi `request.user = { userId, email, role }` |
-| [guards/jwt-auth.guard.ts](../../src/modules/auth/guards/jwt-auth.guard.ts) | Guard (`AuthGuard('jwt')`) yang dipasang manual per-route via `@UseGuards(JwtAuthGuard)` |
-| [dto/login.dto.ts](../../src/modules/auth/dto/login.dto.ts) | Validasi request body |
+| File                                                                            | Peran                                                                                                                                                                                       |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [auth.controller.ts](../../src/modules/auth/auth.controller.ts)                 | Endpoint `login` (set cookie via `res.cookie`, kembalikan `user`) & `logout` (`res.clearCookie`). Memakai `@Res({ passthrough: true })` agar cookie keset tanpa mematikan response envelope |
+| [auth.service.ts](../../src/modules/auth/auth.service.ts)                       | Verifikasi kredensial (`bcrypt.compare`) & sign JWT. Tetap framework-agnostic — tidak menyentuh cookie/`Response`                                                                           |
+| [auth.cookie.ts](../../src/modules/auth/auth.cookie.ts)                         | Konstanta nama cookie `ACCESS_TOKEN_COOKIE` & opsi cookie terpusat (`accessTokenCookieOptions()`)                                                                                           |
+| [strategies/jwt.strategy.ts](../../src/modules/auth/strategies/jwt.strategy.ts) | Meng-extract token dari **cookie** `access_token` (`ExtractJwt.fromExtractors`), memvalidasi, dan mengubah payload menjadi `request.user = { userId, email, role }`                         |
+| [guards/jwt-auth.guard.ts](../../src/modules/auth/guards/jwt-auth.guard.ts)     | Guard (`AuthGuard('jwt')`) yang dipasang manual per-route via `@UseGuards(JwtAuthGuard)`                                                                                                    |
+| [dto/login.dto.ts](../../src/modules/auth/dto/login.dto.ts)                     | Validasi request body                                                                                                                                                                       |
 
 `cookie-parser` dipasang global di [main.ts](../../src/main.ts) (`app.use(cookieParser())`) agar `req.cookies` terisi — inilah yang dibaca oleh `JwtStrategy`. CORS juga diset `credentials: true` agar cookie dapat dikirim lintas-origin.
 
 ## Catatan & Batasan Saat Ini
 
-- **Guard bersifat opt-in per route**, bukan global — route yang tidak eksplisit memasang `@UseGuards(JwtAuthGuard)` bersifat publik. Saat ini hanya `GET /api/v1/users` yang diproteksi (lihat [features/users.md](users.md)). Endpoint `categories`, `products`, `orders`, dan `tables` (termasuk create/update/delete) **belum** diproteksi sama sekali.
+- **Guard bersifat opt-in per route**, bukan global route yang tidak eksplisit memasang `@UseGuards(JwtAuthGuard)` bersifat publik. Saat ini hanya `GET /api/v1/users` yang diproteksi (lihat [features/users.md](users.md)). Endpoint `categories`, `menus`, `orders`, dan `tables` (termasuk create/update/delete) **belum** diproteksi sama sekali.
 - **CSRF**: autentikasi berbasis cookie memunculkan risiko CSRF. `SameSite=Lax` sudah memblokir pengiriman cookie pada request lintas-situs yang mengubah state (POST/PATCH/DELETE), memberi proteksi baseline. Jika nanti frontend berbeda domain (`SameSite=None`), perlu ditambahkan proteksi CSRF token.
 - **`login`/`logout` membalas `201 Created`** (perilaku default `@Post`). Secara makna lebih pas `200 OK` — bisa dirapikan dengan `@HttpCode(200)`.
 - Tidak ada refresh token; saat token expired (`Max-Age` habis), user harus login ulang.

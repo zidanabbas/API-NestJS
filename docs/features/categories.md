@@ -1,8 +1,8 @@
-# Fitur: Kategori Produk (Categories)
+# Fitur: Kategori Menu (Categories)
 
 Module: [src/modules/categories](../../src/modules/categories)
 
-CRUD penuh untuk kategori produk (mis. "Makanan", "Minuman"). Satu kategori bisa memiliki banyak produk.
+CRUD penuh untuk kategori menu (mis. "Makanan", "Minuman"). Satu kategori bisa memiliki banyak item menu.
 
 ## Endpoint
 
@@ -116,14 +116,14 @@ Response `200 OK`, diurutkan dari yang terbaru (`createdAt` descending):
 
 **Response `404 Not Found`** — `id` tidak ada.
 
-**Response `409 Conflict`** — kategori masih memiliki produk:
+**Response `409 Conflict`** — kategori masih memiliki menu:
 
 ```json
 {
   "success": false,
   "statusCode": 409,
   "error": "Conflict",
-  "message": "Category still has products and cannot be deleted",
+  "message": "Category still has menu items and cannot be deleted",
   "path": "/api/v1/categories/1",
   "timestamp": "2026-08-14T02:00:00.000Z"
 }
@@ -132,7 +132,7 @@ Response `200 OK`, diurutkan dari yang terbaru (`createdAt` descending):
 ## Business Rules
 
 - **Nama unik**: dicek eksplisit sebelum create, dan sebelum update jika `name` diubah (existing dengan `id` berbeda dianggap konflik) — [categories.service.ts](../../src/modules/categories/categories.service.ts).
-- **Proteksi hapus**: kategori tidak bisa dihapus jika masih punya produk (`CategoriesRepository.countProducts`), agar tidak menyisakan produk yatim/orphan atau mengandalkan error foreign key mentah dari database.
+- **Proteksi hapus**: kategori tidak bisa dihapus jika masih punya menu (`CategoriesRepository.countMenus`), agar tidak menyisakan menu yatim/orphan atau mengandalkan error foreign key mentah dari database.
 - `findOne` (dipakai internal oleh `update`/`remove`) melempar `404 Not Found` jika kategori tidak ditemukan, sehingga update/delete pada ID yang tidak ada selalu konsisten mengembalikan 404.
 
 ## Implementasi Teknis

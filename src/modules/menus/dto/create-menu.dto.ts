@@ -9,10 +9,10 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateProductDto {
+export class CreateMenuDto {
   @ApiProperty({
     example: '1',
-    description: 'Product category ID',
+    description: 'Menu category ID',
   })
   @IsInt()
   @Min(1)

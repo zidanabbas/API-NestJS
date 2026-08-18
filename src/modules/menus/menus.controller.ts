@@ -24,27 +24,27 @@ import {
   ApiOkData,
 } from '#app/common/decorators/api-data-response.decorator.js';
 import { ErrorResponseDto } from '#app/common/dto/error-response.dto.js';
-import { ProductsService } from './products.service.js';
-import { CreateProductDto } from './dto/create-product.dto.js';
-import { UpdateProductDto } from './dto/update-product.dto.js';
-import { ProductResponseDto } from './dto/product-response.dto.js';
-import { SearchProductDto } from './dto/query-product.dto.js';
+import { MenusService } from './menus.service.js';
+import { CreateMenuDto } from './dto/create-menu.dto.js';
+import { UpdateMenuDto } from './dto/update-menu.dto.js';
+import { MenuResponseDto } from './dto/menu-response.dto.js';
+import { SearchMenuDto } from './dto/query-menu.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '#app/generated/prisma/enums.js';
 
-@ApiTags('Products')
-@Controller('products')
-export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+@ApiTags('Menus')
+@Controller('menus')
+export class MenusController {
+  constructor(private readonly menusService: MenusService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiCookieAuth()
-  @ApiOperation({ summary: 'Create a new product (ADMIN ONLY)' })
-  @ApiCreatedData(ProductResponseDto, { description: 'Product created' })
+  @ApiOperation({ summary: 'Create a new menu item (ADMIN ONLY)' })
+  @ApiCreatedData(MenuResponseDto, { description: 'Menu item created' })
   @ApiForbiddenResponse({
     description: 'Requires ADMIN role',
     type: ErrorResponseDto,
@@ -53,66 +53,66 @@ export class ProductsController {
     description: 'Category not found',
     type: ErrorResponseDto,
   })
-  create(@Body() dto: CreateProductDto) {
-    return this.productsService.create(dto);
+  create(@Body() dto: CreateMenuDto) {
+    return this.menusService.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all products (optional ?search=)' })
-  @ApiOkData(ProductResponseDto, {
+  @ApiOperation({ summary: 'Get all menu items (optional ?search=)' })
+  @ApiOkData(MenuResponseDto, {
     isArray: true,
-    description: 'List of products with their category relation',
+    description: 'List of menu items with their category relation',
   })
-  findAll(@Query() query: SearchProductDto) {
-    return this.productsService.findAll(query.search);
+  findAll(@Query() query: SearchMenuDto) {
+    return this.menusService.findAll(query.search);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get product details' })
-  @ApiOkData(ProductResponseDto, {
-    description: 'Product details with its category relation',
+  @ApiOperation({ summary: 'Get menu item details' })
+  @ApiOkData(MenuResponseDto, {
+    description: 'Menu item details with its category relation',
   })
   @ApiNotFoundResponse({
-    description: 'Product not found',
+    description: 'Menu item not found',
     type: ErrorResponseDto,
   })
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.productsService.findOne(id);
+    return this.menusService.findOne(id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiCookieAuth()
-  @ApiOperation({ summary: 'Update a product (ADMIN ONLY)' })
-  @ApiOkData(ProductResponseDto, { description: 'Product updated' })
+  @ApiOperation({ summary: 'Update a menu item (ADMIN ONLY)' })
+  @ApiOkData(MenuResponseDto, { description: 'Menu item updated' })
   @ApiForbiddenResponse({
     description: 'Requires ADMIN role',
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
-    description: 'Product or category not found',
+    description: 'Menu item or category not found',
     type: ErrorResponseDto,
   })
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProductDto) {
-    return this.productsService.update(id, dto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateMenuDto) {
+    return this.menusService.update(id, dto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiCookieAuth()
-  @ApiOperation({ summary: 'Delete a product (ADMIN ONLY)' })
-  @ApiOkData(ProductResponseDto, { description: 'Product deleted' })
+  @ApiOperation({ summary: 'Delete a menu item (ADMIN ONLY)' })
+  @ApiOkData(MenuResponseDto, { description: 'Menu item deleted' })
   @ApiForbiddenResponse({
     description: 'Requires ADMIN role',
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
-    description: 'Product not found',
+    description: 'Menu item not found',
     type: ErrorResponseDto,
   })
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.productsService.remove(id);
+    return this.menusService.remove(id);
   }
 }

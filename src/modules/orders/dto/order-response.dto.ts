@@ -5,7 +5,7 @@ import {
   PaymentMethod,
   PaymentStatus,
 } from '#app/generated/prisma/enums.js';
-import { ProductResponseDto } from '#app/modules/products/dto/product-response.dto.js';
+import { MenuResponseDto } from '#app/modules/menus/dto/menu-response.dto.js';
 import { TableResponseDto } from '#app/modules/tables/dto/table-response.dto.js';
 
 export class OrderItemResponseDto {
@@ -16,7 +16,7 @@ export class OrderItemResponseDto {
   orderId!: number;
 
   @ApiProperty({ example: 1 })
-  productId!: number;
+  menuId!: number;
 
   @ApiProperty({ example: 2 })
   quantity!: number;
@@ -34,10 +34,10 @@ export class OrderItemResponseDto {
   subtotal!: string;
 
   @ApiProperty({
-    type: () => ProductResponseDto,
-    description: 'Purchased product',
+    type: () => MenuResponseDto,
+    description: 'Purchased menu item',
   })
-  product!: ProductResponseDto;
+  menu!: MenuResponseDto;
 }
 
 export class PaymentResponseDto {

@@ -25,7 +25,7 @@ erDiagram
         datetime updatedAt
     }
 
-    Product {
+    Menu {
         int id PK
         int categoryId FK
         string name
@@ -53,7 +53,7 @@ erDiagram
     OrderItem {
         int id PK
         int orderId FK
-        int productId FK
+        int menuId FK
         int quantity
         decimal price
         decimal subtotal
@@ -84,8 +84,8 @@ erDiagram
         datetime updatedAt
     }
 
-    Category ||--o{ Product : "memiliki"
-    Product  ||--o{ OrderItem : "dipesan dalam"
+    Category ||--o{ Menu : "memiliki"
+    Menu     ||--o{ OrderItem : "dipesan dalam"
     Order    ||--o{ OrderItem : "berisi"
     Order    ||--o| Payment : "dibayar via"
     Table    ||--o{ Order : "menaungi"
@@ -116,11 +116,11 @@ Lihat [features/users.md](features/users.md) dan [features/auth.md](features/aut
 | `id` | `Int` (PK, autoincrement) | |
 | `name` | `String` (unique) | Divalidasi unik di level service ([categories.service.ts](../src/modules/categories/categories.service.ts)) |
 | `isActive` | `Boolean` | Default `true`. Kolom tersedia di skema, tapi belum diekspos lewat DTO/endpoint |
-| `products` | `Product[]` | Relasi one-to-many ke `Product` |
+| `menus` | `Menu[]` | Relasi one-to-many ke `Menu` |
 
 Lihat [features/categories.md](features/categories.md).
 
-### `Product`
+### `Menu`
 
 | Field | Tipe | Keterangan |
 | ----- | ---- | ---------- |
@@ -135,7 +135,7 @@ Lihat [features/categories.md](features/categories.md).
 | `category` | `Category` | Relasi many-to-one |
 | `orderItems` | `OrderItem[]` | Relasi one-to-many |
 
-Lihat [features/products.md](features/products.md).
+Lihat [features/menus.md](features/menus.md).
 
 ### `Order`
 
@@ -161,9 +161,9 @@ Lihat [features/orders.md](features/orders.md).
 | ----- | ---- | ---------- |
 | `id` | `Int` (PK) | |
 | `orderId` | `Int` (FK → `Order.id`) | |
-| `productId` | `Int` (FK → `Product.id`) | |
+| `menuId` | `Int` (FK → `Menu.id`) | |
 | `quantity` | `Int` | |
-| `price` | `Decimal(12,2)` | Harga produk saat pesanan dibuat (snapshot, agar tidak berubah jika harga produk berubah kemudian) |
+| `price` | `Decimal(12,2)` | Harga menu saat pesanan dibuat (snapshot, agar tidak berubah jika harga menu berubah kemudian) |
 | `subtotal` | `Decimal(12,2)` | `price * quantity` |
 
 ### `Table`
@@ -196,6 +196,10 @@ Lihat [features/tables.md](features/tables.md).
 | `transactionId` | `String?` (unique) | ID transaksi dari payment gateway |
 | `qrString` / `qrUrl` | `String?` | Data QR code untuk pembayaran QRIS |
 | `paidAt` / `expiredAt` | `DateTime?` | |
+
+## Riwayat Skema
+
+- **2026-08-18** — model `Product` di-rename menjadi `Menu` (tabel `Product` → `Menu`, kolom `OrderItem.productId` → `menuId`), lewat migration [`20260818120000_rename_product_to_menu`](../prisma/migrations/20260818120000_rename_product_to_menu/migration.sql). Migration ini memakai `ALTER TABLE ... RENAME` (bukan drop/create), sehingga data yang sudah ada tidak hilang.
 
 ## Enum
 

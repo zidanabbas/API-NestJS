@@ -26,7 +26,7 @@
 
 ## Tentang Proyek
 
-Food Ordering API adalah backend service untuk aplikasi pemesanan makanan. Saat ini API menyediakan pengelolaan **user**, **autentikasi (JWT)**, **kategori produk**, dan **produk**. Skema database juga sudah menyiapkan entitas **Order**, **OrderItem**, dan **Payment** (QRIS) untuk pengembangan fitur pemesanan & pembayaran selanjutnya.
+Food Ordering API adalah backend service untuk aplikasi pemesanan makanan. Saat ini API menyediakan pengelolaan **user**, **autentikasi (JWT)**, **kategori menu**, dan **menu**. Skema database juga sudah menyiapkan entitas **Order**, **OrderItem**, dan **Payment** (QRIS) untuk pengembangan fitur pemesanan & pembayaran selanjutnya.
 
 ## Tech Stack
 
@@ -50,8 +50,8 @@ Food Ordering API adalah backend service untuk aplikasi pemesanan makanan. Saat 
 | Health check | ✅ | — |
 | Autentikasi (login JWT) | ✅ | [docs/features/auth.md](docs/features/auth.md) |
 | Manajemen User (registrasi & list) | ✅ | [docs/features/users.md](docs/features/users.md) |
-| Kategori Produk (CRUD) | ✅ | [docs/features/categories.md](docs/features/categories.md) |
-| Produk (CRUD) | ✅ | [docs/features/products.md](docs/features/products.md) |
+| Kategori Menu (CRUD) | ✅ | [docs/features/categories.md](docs/features/categories.md) |
+| Menu (CRUD) | ✅ | [docs/features/menus.md](docs/features/menus.md) |
 | Order & Payment (QRIS) | 🚧 skema database siap, service/endpoint belum dibuat | [docs/database.md](docs/database.md#roadmap-order--payment) |
 
 Lihat detail lengkap tiap fitur (endpoint, request/response, business rules) di folder [`docs/`](docs/README.md).
@@ -62,7 +62,7 @@ Lihat detail lengkap tiap fitur (endpoint, request/response, business rules) di 
 latihan-nest/
 ├── docs/                        # Dokumentasi lengkap (arsitektur, database, per-fitur)
 ├── prisma/
-│   └── schema.prisma            # Skema database (User, Product, Category, Order, OrderItem, Payment)
+│   └── schema.prisma            # Skema database (User, Menu, Category, Order, OrderItem, Payment)
 ├── src/
 │   ├── common/
 │   │   ├── filter/               # Global exception filter (response error konsisten)
@@ -74,8 +74,8 @@ latihan-nest/
 │   ├── modules/
 │   │   ├── auth/                 # Login, JWT strategy & guard
 │   │   ├── users/                # Registrasi & daftar user
-│   │   ├── categories/           # CRUD kategori produk
-│   │   └── products/             # CRUD produk
+│   │   ├── categories/           # CRUD kategori menu
+│   │   └── menus/                # CRUD menu
 │   ├── app.module.ts
 │   ├── app.controller.ts         # Health check endpoint
 │   └── main.ts                   # Bootstrap: prefix /api, versioning, pipes, filters, Swagger
@@ -171,8 +171,8 @@ Semua dokumentasi detail (arsitektur, skema database, dan spesifikasi tiap fitur
 - [docs/database.md](docs/database.md) — skema Prisma, ERD, relasi antar tabel
 - [docs/features/auth.md](docs/features/auth.md) — autentikasi & JWT
 - [docs/features/users.md](docs/features/users.md) — manajemen user
-- [docs/features/categories.md](docs/features/categories.md) — kategori produk
-- [docs/features/products.md](docs/features/products.md) — produk
+- [docs/features/categories.md](docs/features/categories.md) — kategori menu
+- [docs/features/menus.md](docs/features/menus.md) — menu
 
 ## Lisensi
 

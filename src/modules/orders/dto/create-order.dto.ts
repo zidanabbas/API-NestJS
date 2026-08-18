@@ -40,11 +40,11 @@ export class CreateOrderDto {
     type: () => [CreateOrderItemDto],
     example: [
       {
-        productId: 1,
+        menuId: 1,
         quantity: 2,
       },
       {
-        productId: 2,
+        menuId: 2,
         quantity: 1,
       },
     ],

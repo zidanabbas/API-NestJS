@@ -116,7 +116,7 @@ export class CategoriesController {
     type: ErrorResponseDto,
   })
   @ApiConflictResponse({
-    description: 'Category still has products',
+    description: 'Category still has menu items',
     type: ErrorResponseDto,
   })
   remove(@Param('id', ParseIntPipe) id: number) {

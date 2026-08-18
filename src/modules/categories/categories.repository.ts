@@ -43,9 +43,9 @@ export class CategoriesRepository {
     });
   }
 
-  // Used to block deletion of a category that still has products (avoids raw FK errors).
-  countProducts(categoryId: number) {
-    return this.prisma.product.count({
+  // Used to block deletion of a category that still has menu items (avoids raw FK errors).
+  countMenus(categoryId: number) {
+    return this.prisma.menu.count({
       where: { categoryId },
     });
   }

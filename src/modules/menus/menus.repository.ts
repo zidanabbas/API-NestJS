@@ -1,14 +1,14 @@
 import { PrismaService } from '#app/database/prisma.service.js';
 import { Prisma } from '#app/generated/prisma/client.js';
-import { ProductUpdateInput } from '#app/generated/prisma/models.js';
+import { MenuUpdateInput } from '#app/generated/prisma/models.js';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class ProductsRepository {
+export class MenusRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(data: Prisma.ProductCreateInput) {
-    return this.prisma.product.create({
+  create(data: Prisma.MenuCreateInput) {
+    return this.prisma.menu.create({
       data,
       include: {
         category: true,
@@ -17,7 +17,7 @@ export class ProductsRepository {
   }
 
   findAll(search?: string) {
-    return this.prisma.product.findMany({
+    return this.prisma.menu.findMany({
       where: search
         ? {
             OR: [
@@ -32,7 +32,7 @@ export class ProductsRepository {
   }
 
   findById(id: number) {
-    return this.prisma.product.findUnique({
+    return this.prisma.menu.findUnique({
       where: { id },
       include: {
         category: true,
@@ -40,8 +40,8 @@ export class ProductsRepository {
     });
   }
 
-  update(id: number, data: ProductUpdateInput) {
-    return this.prisma.product.update({
+  update(id: number, data: MenuUpdateInput) {
+    return this.prisma.menu.update({
       where: { id },
       data,
       include: {
@@ -51,7 +51,7 @@ export class ProductsRepository {
   }
 
   delete(id: number) {
-    return this.prisma.product.delete({
+    return this.prisma.menu.delete({
       where: { id },
     });
   }

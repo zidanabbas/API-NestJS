@@ -1,12 +1,12 @@
 import { IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-export class SearchProductDto {
+export class SearchMenuDto {
   /**
-   * Cari produk berdasarkan nama atau deskripsi.
+   * Cari menu berdasarkan nama atau deskripsi.
    */
   @ApiPropertyOptional({
-    description: 'Cari produk berdasarkan nama atau deskripsi',
+    description: 'Cari menu berdasarkan nama atau deskripsi',
     example: 'kopi',
   })
   @IsOptional()

@@ -1,23 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { ProductsRepository } from './products.repository.js';
+import { MenusRepository } from './menus.repository.js';
 import { CategoriesRepository } from '#app/modules/categories/categories.repository.js';
-import { CreateProductDto } from './dto/create-product.dto.js';
-import { UpdateProductDto } from './dto/update-product.dto.js';
+import { CreateMenuDto } from './dto/create-menu.dto.js';
+import { UpdateMenuDto } from './dto/update-menu.dto.js';
 
 @Injectable()
-export class ProductsService {
+export class MenusService {
   constructor(
-    private readonly productsRepository: ProductsRepository,
+    private readonly menusRepository: MenusRepository,
     private readonly categoriesRepository: CategoriesRepository,
   ) {}
 
-  async create(dto: CreateProductDto) {
+  async create(dto: CreateMenuDto) {
     const category = await this.categoriesRepository.findById(dto.categoryId);
 
     if (!category) {
       throw new NotFoundException('Category not found');
     }
-    return this.productsRepository.create({
+    return this.menusRepository.create({
       name: dto.name,
       description: dto.description,
       price: dto.price,
@@ -32,18 +32,18 @@ export class ProductsService {
   }
 
   async findAll(search?: string) {
-    return this.productsRepository.findAll(search);
+    return this.menusRepository.findAll(search);
   }
 
   async findOne(id: number) {
-    const product = await this.productsRepository.findById(id);
-    if (!product) {
-      throw new NotFoundException('Product not found');
+    const menu = await this.menusRepository.findById(id);
+    if (!menu) {
+      throw new NotFoundException('Menu not found');
     }
-    return product;
+    return menu;
   }
 
-  async update(id: number, dto: UpdateProductDto) {
+  async update(id: number, dto: UpdateMenuDto) {
     await this.findOne(id);
 
     if (dto.categoryId !== undefined) {
@@ -53,7 +53,7 @@ export class ProductsService {
       }
     }
 
-    return this.productsRepository.update(id, {
+    return this.menusRepository.update(id, {
       ...(dto.name !== undefined && {
         name: dto.name,
       }),
@@ -78,6 +78,6 @@ export class ProductsService {
 
   async remove(id: number) {
     await this.findOne(id);
-    return this.productsRepository.delete(id);
+    return this.menusRepository.delete(id);
   }
 }

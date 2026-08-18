@@ -41,11 +41,11 @@ export class OrdersController {
   @ApiOperation({ summary: 'Create a new order with its items' })
   @ApiCreatedData(OrderResponseDto, { description: 'Order created' })
   @ApiBadRequestResponse({
-    description: 'Product inactive, insufficient stock, or table inactive',
+    description: 'Menu item inactive, insufficient stock, or table inactive',
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
-    description: 'Product not found',
+    description: 'Menu item not found',
     type: ErrorResponseDto,
   })
   create(@Body() dto: CreateOrderDto) {
@@ -57,7 +57,7 @@ export class OrdersController {
   @ApiOperation({ summary: 'Get all orders' })
   @ApiOkData(OrderResponseDto, {
     isArray: true,
-    description: 'List of orders with their items and products',
+    description: 'List of orders with their items and menu items',
   })
   findAll() {
     return this.ordersService.findAll();
@@ -66,7 +66,7 @@ export class OrdersController {
   @Get(':id')
   @ApiOperation({ summary: 'Get order details' })
   @ApiOkData(OrderResponseDto, {
-    description: 'Order details with items, products, and payment',
+    description: 'Order details with items, menu items, and payment',
   })
   @ApiNotFoundResponse({
     description: 'Order not found',

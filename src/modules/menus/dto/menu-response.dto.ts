@@ -2,13 +2,13 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { CategoryResponseDto } from '#app/modules/categories/dto/category-response.dto.js';
 
-export class ProductResponseDto {
+export class MenuResponseDto {
   @ApiProperty({ example: 1 })
   id!: number;
 
   @ApiProperty({
     example: 1,
-    description: 'ID of the category this product belongs to',
+    description: 'ID of the category this menu item belongs to',
   })
   categoryId!: number;
 

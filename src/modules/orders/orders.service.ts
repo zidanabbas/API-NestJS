@@ -28,36 +28,36 @@ export class OrdersService {
       const orderItems: Prisma.OrderItemUncheckedCreateWithoutOrderInput[] = [];
 
       for (const item of dto.items) {
-        const product = await tx.product.findUnique({
+        const menu = await tx.menu.findUnique({
           where: {
-            id: item.productId,
+            id: item.menuId,
           },
         });
 
-        if (!product) {
-          throw new NotFoundException(`Product ${item.productId} not found`);
+        if (!menu) {
+          throw new NotFoundException(`Menu ${item.menuId} not found`);
         }
 
-        if (!product.isActive) {
-          throw new BadRequestException(`${product.name} is not available`);
+        if (!menu.isActive) {
+          throw new BadRequestException(`${menu.name} is not available`);
         }
 
-        if (product.stock < item.quantity) {
+        if (menu.stock < item.quantity) {
           throw new BadRequestException(
-            `Insufficient stock for ${product.name}`,
+            `Insufficient stock for ${menu.name}`,
           );
         }
 
-        const price = Number(product.price);
+        const price = Number(menu.price);
 
         const subtotal = price * item.quantity;
 
         totalAmount += subtotal;
 
         orderItems.push({
-          productId: product.id,
+          menuId: menu.id,
           quantity: item.quantity,
-          price: product.price,
+          price: menu.price,
           subtotal,
         });
       }
@@ -89,9 +89,9 @@ export class OrdersService {
       );
 
       for (const item of dto.items) {
-        const updated = await tx.product.updateMany({
+        const updated = await tx.menu.updateMany({
           where: {
-            id: item.productId,
+            id: item.menuId,
             stock: { gte: item.quantity },
           },
 
@@ -103,7 +103,7 @@ export class OrdersService {
         });
         if (updated.count === 0) {
           throw new BadRequestException(
-            `Insufficient stock for product ${item.productId}`,
+            `Insufficient stock for menu ${item.menuId}`,
           );
         }
       }

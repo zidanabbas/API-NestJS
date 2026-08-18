@@ -28,7 +28,7 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
-model Product {
+model Menu {
   id         Int @id @default(autoincrement())
   categoryId Int
 
@@ -45,12 +45,12 @@ model Product {
 }
 
 model Category {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  isActive  Boolean   @default(true)
-  products  Product[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  menus     Menu[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Order {
@@ -79,16 +79,16 @@ enum OrderStatus {
 }
 
 model OrderItem {
-  id        Int     @id @default(autoincrement())
-  orderId   Int
-  productId Int
-  quantity  Int
-  price     Decimal @db.Decimal(12, 2)
-  subtotal  Decimal @db.Decimal(12, 2)
+  id       Int     @id @default(autoincrement())
+  orderId  Int
+  menuId   Int
+  quantity Int
+  price    Decimal @db.Decimal(12, 2)
+  subtotal Decimal @db.Decimal(12, 2)
 
   order Order @relation(fields: [orderId], references: [id])
 
-  product Product @relation(fields: [productId], references: [id])
+  menu Menu @relation(fields: [menuId], references: [id])
 }
 
 model Table {

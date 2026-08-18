@@ -7,7 +7,7 @@ Food Ordering API dibangun dengan NestJS mengikuti pola layer klasik **Controlle
 ```mermaid
 flowchart LR
     Client(["Client / Swagger UI"]) -->|HTTP request| Controller
-    subgraph Module["Feature Module (contoh: Products)"]
+    subgraph Module["Feature Module (contoh: Menus)"]
         Controller["Controller\n(routing, DTO, Swagger docs)"]
         Service["Service\n(business rules, validasi relasi)"]
         Repository["Repository\n(query Prisma)"]
@@ -20,10 +20,10 @@ flowchart LR
 - **Service** — tempat business logic: cek duplikat, cek keberadaan relasi (mis. kategori harus ada sebelum produk dibuat), throw `NotFoundException` / `ConflictException` sesuai kondisi.
 - **Repository** — satu-satunya lapisan yang memanggil `PrismaService`. Memisahkan query database dari business logic sehingga service tetap mudah diuji/di-mock.
 
-Contoh nyata pola ini bisa dilihat di module `categories` dan `products`:
+Contoh nyata pola ini bisa dilihat di module `categories` dan `menus`:
 
 - [categories.controller.ts](../src/modules/categories/categories.controller.ts) → [categories.service.ts](../src/modules/categories/categories.service.ts) → [categories.repository.ts](../src/modules/categories/categories.repository.ts)
-- [products.controller.ts](../src/modules/products/products.controller.ts) → [products.service.ts](../src/modules/products/products.service.ts) → [products.repository.ts](../src/modules/products/products.repository.ts)
+- [menus.controller.ts](../src/modules/menus/menus.controller.ts) → [menus.service.ts](../src/modules/menus/menus.service.ts) → [menus.repository.ts](../src/modules/menus/menus.repository.ts)
 
 ## Module Graph
 
@@ -33,26 +33,26 @@ flowchart TD
     AppModule --> AuthModule
     AppModule --> UsersModule
     AppModule --> CategoriesModule
-    AppModule --> ProductsModule
+    AppModule --> MenusModule
     AppModule --> OrdersModule
     AppModule --> TablesModule
 
     AuthModule -->|imports| UsersModule
-    ProductsModule -->|imports| CategoriesModule
+    MenusModule -->|imports| CategoriesModule
     OrdersModule -->|imports| PrismaModule
     OrdersModule -->|imports| TablesModule
 
     PrismaModule -.->|"@Global()"| AuthModule
     PrismaModule -.->|"@Global()"| UsersModule
     PrismaModule -.->|"@Global()"| CategoriesModule
-    PrismaModule -.->|"@Global()"| ProductsModule
+    PrismaModule -.->|"@Global()"| MenusModule
     PrismaModule -.->|"@Global()"| OrdersModule
     PrismaModule -.->|"@Global()"| TablesModule
 ```
 
 - `PrismaModule` ditandai `@Global()` ([prisma.module.ts](../src/database/prisma.module.ts)) sehingga `PrismaService` bisa langsung di-inject di repository module manapun tanpa perlu import ulang.
 - `AuthModule` meng-import `UsersModule` untuk mengecek kredensial user saat login.
-- `ProductsModule` meng-import `CategoriesModule` untuk memvalidasi `categoryId` saat membuat/mengubah produk.
+- `MenusModule` meng-import `CategoriesModule` untuk memvalidasi `categoryId` saat membuat/mengubah menu.
 - `OrdersModule` meng-import `PrismaModule` secara eksplisit ([orders.module.ts](../src/modules/orders/orders.module.ts)) karena `OrdersService` juga menyuntik `PrismaService` langsung untuk menjalankan transaksi lintas tabel.
 - `OrdersModule` meng-import `TablesModule` agar `TablesRepository` bisa di-inject ke `OrdersService` untuk resolve `tableCode` → `tableId` saat membuat order (lihat [features/orders.md](features/orders.md#pengaitan-meja-tablecode)). `TablesModule` meng-`exports` `TablesService` dan `TablesRepository` ([tables.module.ts](../src/modules/tables/tables.module.ts)) untuk keperluan ini.
 
@@ -135,7 +135,7 @@ Autentikasi memakai **JWT yang disimpan di httpOnly cookie** via Passport (`pass
 - Token diset sebagai cookie `access_token` (httpOnly) saat login dan dibaca kembali dari cookie oleh `JwtStrategy` — bukan dari header `Authorization`. `cookie-parser` dipasang global di [main.ts](../src/main.ts) agar `req.cookies` terisi.
 - `JwtStrategy` ([jwt.strategy.ts](../src/modules/auth/strategies/jwt.strategy.ts)) memvalidasi signature & masa berlaku token, lalu meng-attach `{ userId, email, role }` ke `request.user`.
 - `JwtAuthGuard` ([jwt-auth.guard.ts](../src/modules/auth/guards/jwt-auth.guard.ts)) dipasang per-route dengan `@UseGuards(JwtAuthGuard)` — **bukan** global guard. Artinya setiap route publik secara default kecuali ditandai guard ini secara eksplisit.
-- Saat ini hanya `GET /api/v1/users` yang diproteksi. Module `categories`, `products`, `orders`, dan `tables` **belum** memasang guard apa pun (lihat catatan di [features/categories.md](features/categories.md) dan [features/products.md](features/products.md)).
+- Saat ini hanya `GET /api/v1/users` yang diproteksi. Module `categories`, `menus`, `orders`, dan `tables` **belum** memasang guard apa pun (lihat catatan di [features/categories.md](features/categories.md) dan [features/menus.md](features/menus.md)).
 
 ## Struktur Folder `src/`
 
@@ -162,7 +162,7 @@ src/
     ├── auth/
     ├── users/
     ├── categories/
-    ├── products/
+    ├── menus/
     ├── orders/
     └── tables/
 ```

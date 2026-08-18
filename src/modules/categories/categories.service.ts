@@ -55,10 +55,10 @@ export class CategoriesService {
   async remove(id: number) {
     await this.findOne(id);
 
-    const hasProducts = await this.repository.countProducts(id);
-    if (hasProducts > 0) {
+    const hasMenus = await this.repository.countMenus(id);
+    if (hasMenus > 0) {
       throw new ConflictException(
-        'Category still has products and cannot be deleted',
+        'Category still has menu items and cannot be deleted',
       );
     }
 

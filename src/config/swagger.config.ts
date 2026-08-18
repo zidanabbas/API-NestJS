@@ -8,7 +8,7 @@ export function setupSwagger(app: INestApplication): void {
       [
         'REST API for a food ordering & dine-in table management system.',
         '',
-        'Covers the full ordering flow: product catalog (categories & products), ',
+        'Covers the full ordering flow: menu catalog (categories & menus), ',
         'customer orders with line items and stock control, dine-in tables, and payments.',
         '',
         '**Authentication:** cookie-based JWT. Login via `POST /api/v1/auth/login` — the access token is set as an httpOnly cookie (`access_token`) and sent automatically on subsequent requests.',
@@ -21,8 +21,8 @@ export function setupSwagger(app: INestApplication): void {
     .addTag('App', 'Health check & general endpoints')
     .addTag('Auth', 'Authentication & login')
     .addTag('Users', 'User registration & management')
-    .addTag('Categories', 'Product categories (CRUD)')
-    .addTag('Products', 'Products (CRUD)')
+    .addTag('Categories', 'Menu categories (CRUD)')
+    .addTag('Menus', 'Menu items (CRUD)')
     .addTag('Orders', 'Orders & order items')
     .addTag('Tables', 'Dine-in tables (CRUD)')
     .addCookieAuth('access_token')

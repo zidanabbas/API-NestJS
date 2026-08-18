@@ -2,19 +2,19 @@
 
 Module: [src/modules/orders](../../src/modules/orders)
 
-Membuat dan membaca pesanan. Membuat order adalah operasi **multi-langkah** yang dijalankan dalam satu **transaksi database** (`prisma.$transaction`): validasi tiap produk, hitung total, buat `Order` + `OrderItem`, lalu kurangi `stock` produk. Jika salah satu langkah gagal, **seluruh** perubahan dibatalkan (all-or-nothing).
+Membuat dan membaca pesanan. Membuat order adalah operasi **multi-langkah** yang dijalankan dalam satu **transaksi database** (`prisma.$transaction`): validasi tiap menu, hitung total, buat `Order` + `OrderItem`, lalu kurangi `stock` menu. Jika salah satu langkah gagal, **seluruh** perubahan dibatalkan (all-or-nothing).
 
 ## Endpoint
 
-| Method | Path                 |   Auth    | Deskripsi                        |
-| ------ | -------------------- | :-------: | -------------------------------- |
-| `POST` | `/api/v1/orders`     | Publik ⚠️ | Buat pesanan baru dengan itemnya |
-| `GET`  | `/api/v1/orders`     |  Publik   | Daftar semua pesanan             |
-| `GET`  | `/api/v1/orders/:id` |  Publik   | Detail satu pesanan              |
+| Method | Path                 |  Auth  | Deskripsi                        |
+| ------ | -------------------- | :----: | -------------------------------- |
+| `POST` | `/api/v1/orders`     | Publik | Buat pesanan baru dengan itemnya |
+| `GET`  | `/api/v1/orders`     | Publik | Daftar semua pesanan             |
+| `GET`  | `/api/v1/orders/:id` | Publik | Detail satu pesanan              |
 
-> ⚠️ Lihat [Catatan & Batasan](#catatan--batasan-saat-ini) — semua endpoint saat ini **tidak** dilindungi login/role apa pun.
+> Lihat [Catatan & Batasan](#catatan--batasan-saat-ini) — semua endpoint saat ini **tidak** dilindungi login/role apa pun.
 
-Setiap response order menyertakan relasi `items` (masing-masing dengan `product` lengkap) dan `table` (`null` bila order tanpa meja). Endpoint detail (`GET /:id`) juga menyertakan relasi `payment`.
+Setiap response order menyertakan relasi `items` (masing-masing dengan `menu` lengkap) dan `table` (`null` bila order tanpa meja). Endpoint detail (`GET /:id`) juga menyertakan relasi `payment`.
 
 ### `POST /api/v1/orders` — Buat Pesanan
 
@@ -26,20 +26,20 @@ Setiap response order menyertakan relasi `items` (masing-masing dengan `product`
   "customerPhone": "08123456789",
   "tableCode": "A8F3X9",
   "items": [
-    { "productId": 1, "quantity": 2 },
-    { "productId": 2, "quantity": 1 }
+    { "menuId": 1, "quantity": 2 },
+    { "menuId": 2, "quantity": 1 }
   ]
 }
 ```
 
-| Field               | Tipe     | Validasi                                                                                                             |
-| ------------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
-| `customerName`      | `string` | wajib, tidak boleh kosong                                                                                            |
-| `customerPhone`     | `string` | wajib, tidak boleh kosong                                                                                            |
-| `tableCode`         | `string` | **opsional**, tidak boleh string kosong bila dikirim. Lihat [Pengaitan Meja](#pengaitan-meja-tablecode)              |
-| `items`             | `array`  | wajib, minimal 1 item, tiap elemen divalidasi ([CreateOrderItemDto](../../src/modules/orders/dto/order-item.dto.ts)) |
-| `items[].productId` | `number` | wajib, integer, minimal `1`                                                                                          |
-| `items[].quantity`  | `number` | wajib, integer, minimal `1`                                                                                          |
+| Field              | Tipe     | Validasi                                                                                                             |
+| ------------------ | -------- | -------------------------------------------------------------------------------------------------------------------- |
+| `customerName`     | `string` | wajib, tidak boleh kosong                                                                                            |
+| `customerPhone`    | `string` | wajib, tidak boleh kosong                                                                                            |
+| `tableCode`        | `string` | **opsional**, tidak boleh string kosong bila dikirim. Lihat [Pengaitan Meja](#pengaitan-meja-tablecode)              |
+| `items`            | `array`  | wajib, minimal 1 item, tiap elemen divalidasi ([CreateOrderItemDto](../../src/modules/orders/dto/order-item.dto.ts)) |
+| `items[].menuId`   | `number` | wajib, integer, minimal `1`                                                                                          |
+| `items[].quantity` | `number` | wajib, integer, minimal `1`                                                                                          |
 
 **Response `201 Created`** — order yang baru dibuat beserta item-nya:
 
@@ -68,11 +68,11 @@ Setiap response order menyertakan relasi `items` (masing-masing dengan `product`
       {
         "id": 1,
         "orderId": 1,
-        "productId": 1,
+        "menuId": 1,
         "quantity": 2,
         "price": "25000.00",
         "subtotal": "50000",
-        "product": {
+        "menu": {
           "id": 1,
           "categoryId": 1,
           "name": "Nasi Goreng Spesial",
@@ -94,10 +94,10 @@ Beberapa hal penting pada response ini:
 
 - **`orderNumber`** di-generate otomatis oleh server dengan format `ORD-<timestamp>-<random 0–999>` (`OrdersService.generateOrderNumber`). Tidak dikirim oleh client.
 - **`status`** tidak dikirim client dan tidak di-set eksplisit — otomatis memakai default skema, yaitu `PENDING`.
-- **`price`** pada tiap item adalah **snapshot** harga produk saat order dibuat (diambil dari `product.price`), agar total tidak berubah jika harga produk diubah di kemudian hari.
+- **`price`** pada tiap item adalah **snapshot** harga menu saat order dibuat (diambil dari `menu.price`), agar total tidak berubah jika harga menu diubah di kemudian hari.
 - **`subtotal`** = `price × quantity`; **`totalAmount`** = jumlah seluruh `subtotal`.
 - Nilai `Decimal` (mis. `price`, `subtotal`, `totalAmount`) diserialisasi JSON sebagai **string**.
-- **`stock`** produk pada response sudah berkurang sesuai `quantity` yang dipesan.
+- **`stock`** menu pada response sudah berkurang sesuai `quantity` yang dipesan.
 - **`table`** berisi detail meja jika `tableCode` dikirim & valid, atau `null` jika `tableCode` tidak dikirim (order tanpa meja). Lihat [Pengaitan Meja](#pengaitan-meja-tablecode).
 
 **Response `404 Not Found`** — `tableCode` dikirim tapi tidak ditemukan:
@@ -113,20 +113,20 @@ Beberapa hal penting pada response ini:
 }
 ```
 
-**Response `404 Not Found`** — salah satu `productId` tidak ada:
+**Response `404 Not Found`** — salah satu `menuId` tidak ada:
 
 ```json
 {
   "success": false,
   "statusCode": 404,
   "error": "Not Found",
-  "message": "Product 99 not found",
+  "message": "Menu 99 not found",
   "path": "/api/v1/orders",
   "timestamp": "2026-08-14T02:00:00.000Z"
 }
 ```
 
-**Response `400 Bad Request`** — produk nonaktif atau stok kurang:
+**Response `400 Bad Request`** — menu nonaktif atau stok kurang:
 
 ```json
 {
@@ -139,15 +139,15 @@ Beberapa hal penting pada response ini:
 }
 ```
 
-> Pesan lain yang mungkin muncul: `"<nama produk> is not available"` (produk `isActive: false`). Karena semua langkah berada dalam satu transaksi, kegagalan validasi item ke-2 **tidak** akan menyisakan order setengah jadi atau stok yang terlanjur berkurang.
+> Pesan lain yang mungkin muncul: `"<nama menu> is not available"` (menu `isActive: false`). Karena semua langkah berada dalam satu transaksi, kegagalan validasi item ke-2 **tidak** akan menyisakan order setengah jadi atau stok yang terlanjur berkurang.
 
 ### `GET /api/v1/orders` — Daftar Pesanan
 
-**Response `200 OK`** — array order (shape sama seperti response create, lengkap dengan `items` & `product`). **Belum ada urutan eksplisit, filter, atau pagination** — selalu mengembalikan seluruh order.
+**Response `200 OK`** — array order (shape sama seperti response create, lengkap dengan `items` & `menu`). **Belum ada urutan eksplisit, filter, atau pagination** — selalu mengembalikan seluruh order.
 
 ### `GET /api/v1/orders/:id` — Detail Pesanan
 
-**Response `200 OK`** — satu order lengkap dengan `items` (beserta `product`) **dan** relasi `payment` (bernilai `null` bila belum ada pembayaran).
+**Response `200 OK`** — satu order lengkap dengan `items` (beserta `menu`) **dan** relasi `payment` (bernilai `null` bila belum ada pembayaran).
 
 **Response `404 Not Found`**:
 
@@ -182,29 +182,29 @@ Pencarian meja ini dilakukan **di luar** `prisma.$transaction` (murni operasi ba
 Seluruh aturan berikut dijalankan **di dalam satu transaksi** ([orders.service.ts](../../src/modules/orders/orders.service.ts)) saat `POST /orders`, kecuali resolusi `tableCode` yang dijalankan sebelum transaksi (lihat [Pengaitan Meja](#pengaitan-meja-tablecode)):
 
 1. **Meja harus valid (jika dikirim)** — `tableCode` di-resolve ke `tableId` lewat `TablesRepository.findByCode`; tidak ditemukan → `404 Not Found` (`"Table with code <kode> not found"`).
-2. **Produk harus ada** — tiap `productId` dicari via `tx.product.findUnique`; jika tidak ada → `404 Not Found` (`"Product <id> not found"`).
-3. **Produk harus aktif** — jika `product.isActive === false` → `400 Bad Request` (`"<nama> is not available"`).
-4. **Stok harus cukup** — jika `product.stock < quantity` → `400 Bad Request` (`"Insufficient stock for <nama>"`).
-5. **Hitung harga** — `price` disnapshot dari produk, `subtotal = price × quantity`, `totalAmount` diakumulasi dari seluruh item.
+2. **Menu harus ada** — tiap `menuId` dicari via `tx.menu.findUnique`; jika tidak ada → `404 Not Found` (`"Menu <id> not found"`).
+3. **Menu harus aktif** — jika `menu.isActive === false` → `400 Bad Request` (`"<nama> is not available"`).
+4. **Stok harus cukup** — jika `menu.stock < quantity` → `400 Bad Request` (`"Insufficient stock for <nama>"`).
+5. **Hitung harga** — `price` disnapshot dari menu, `subtotal = price × quantity`, `totalAmount` diakumulasi dari seluruh item.
 6. **Buat order + item** — `Order` dibuat beserta `OrderItem` (nested `create`) dan `table` (nested `connect`, jika ada) dalam satu operasi.
-7. **Kurangi stok** — untuk tiap item, `product.stock` di-`decrement` sebanyak `quantity`.
+7. **Kurangi stok** — untuk tiap item, `menu.stock` di-`decrement` sebanyak `quantity`.
 
 Jika langkah mana pun melempar error, transaksi otomatis **rollback** — tidak ada order, item, maupun perubahan stok yang tersimpan.
 
 ## Implementasi Teknis
 
-| File                                                                        | Peran                                                                        |
-| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| [orders.controller.ts](../../src/modules/orders/orders.controller.ts)       | Routing `POST` / `GET` / `GET :id`                                           |
-| [orders.service.ts](../../src/modules/orders/orders.service.ts)             | Orkestrasi transaksi, validasi item, hitung total, generate `orderNumber`, resolve `tableCode` → `tableId` |
-| [orders.repository.ts](../../src/modules/orders/orders.repository.ts)       | Query Prisma (`create` menerima `tx`, `findAll`, `findById`, `updateStatus`; semua query `include: { table: true }`) |
-| [dto/create-order.dto.ts](../../src/modules/orders/dto/create-order.dto.ts) | Validasi request create (termasuk nested `items`, `tableCode` opsional)      |
-| [dto/order-item.dto.ts](../../src/modules/orders/dto/order-item.dto.ts)     | Validasi tiap elemen `items` (`productId`, `quantity`)                       |
-| [dto/order-response.dto.ts](../../src/modules/orders/dto/order-response.dto.ts) | Shape response (`OrderResponseDto`, `OrderItemResponseDto`, `PaymentResponseDto`) untuk dokumentasi Swagger |
+| File                                                                            | Peran                                                                                                                |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| [orders.controller.ts](../../src/modules/orders/orders.controller.ts)           | Routing `POST` / `GET` / `GET :id`                                                                                   |
+| [orders.service.ts](../../src/modules/orders/orders.service.ts)                 | Orkestrasi transaksi, validasi item, hitung total, generate `orderNumber`, resolve `tableCode` → `tableId`           |
+| [orders.repository.ts](../../src/modules/orders/orders.repository.ts)           | Query Prisma (`create` menerima `tx`, `findAll`, `findById`, `updateStatus`; semua query `include: { table: true }`) |
+| [dto/create-order.dto.ts](../../src/modules/orders/dto/create-order.dto.ts)     | Validasi request create (termasuk nested `items`, `tableCode` opsional)                                              |
+| [dto/order-item.dto.ts](../../src/modules/orders/dto/order-item.dto.ts)         | Validasi tiap elemen `items` (`menuId`, `quantity`)                                                                  |
+| [dto/order-response.dto.ts](../../src/modules/orders/dto/order-response.dto.ts) | Shape response (`OrderResponseDto`, `OrderItemResponseDto`, `PaymentResponseDto`) untuk dokumentasi Swagger          |
 
 Catatan implementasi:
 
-- **`OrdersService` meng-inject `PrismaService` langsung** (selain `OrdersRepository`) karena transaksi membaca/menulis beberapa tabel (`product`, `order`) sekaligus. Ini pengecualian sadar terhadap aturan "hanya repository yang menyentuh database" demi menjaga semua operasi dalam satu `$transaction`.
+- **`OrdersService` meng-inject `PrismaService` langsung** (selain `OrdersRepository`) karena transaksi membaca/menulis beberapa tabel (`menu`, `order`) sekaligus. Ini pengecualian sadar terhadap aturan "hanya repository yang menyentuh database" demi menjaga semua operasi dalam satu `$transaction`.
 - **`OrdersRepository.create` menerima `tx: Prisma.TransactionClient`** sebagai argumen pertama, sehingga penulisan order ikut dalam transaksi yang sama dengan pengurangan stok.
 - **`OrdersService` juga meng-inject `TablesRepository`** untuk `resolveTableId(tableCode)` — lookup `Table` by `code` dijalankan **sebelum** `$transaction` dimulai (operasi baca murni, tidak perlu ikut dikunci dalam transaksi tulis).
 - **Validasi nested array** memakai `@ValidateNested({ each: true })` + `@Type(() => CreateOrderItemDto)`. Tipe array juga dinyatakan eksplisit di `@ApiProperty({ type: () => [CreateOrderItemDto] })` agar Swagger membaca skema item dengan benar (lihat [Catatan](#catatan--batasan-saat-ini)).
@@ -212,10 +212,10 @@ Catatan implementasi:
 
 ## Catatan & Batasan Saat Ini
 
-- **Tidak ada guard autentikasi** — berbeda dari [products](products.md), [categories](categories.md), & [tables](tables.md) yang endpoint tulisnya kini dibatasi `ADMIN`, seluruh endpoint order masih publik: siapa pun bisa membuat/melihat order tanpa login. Perlu keputusan alur bisnis (pelanggan memesan sendiri vs. lewat kasir) sebelum menambah proteksi.
+- **Tidak ada guard autentikasi** — berbeda dari [menus](menus.md), [categories](categories.md), & [tables](tables.md) yang endpoint tulisnya kini dibatasi `ADMIN`, seluruh endpoint order masih publik: siapa pun bisa membuat/melihat order tanpa login. Perlu keputusan alur bisnis (pelanggan memesan sendiri vs. lewat kasir) sebelum menambah proteksi.
 - **`updateStatus` belum terekspos** — `OrdersRepository.updateStatus` sudah ada, tetapi belum ada service/controller yang memakainya. Jadi belum ada endpoint untuk mengubah status order (mis. `PENDING → CONFIRMED`). Kandidat kuat untuk `PATCH /api/v1/orders/:id/status`.
-- **`GET /orders` tanpa urutan/pagination** — berbeda dengan `products` yang memakai `orderBy: { createdAt: 'desc' }`, `findAll` order belum menetapkan urutan dan selalu mengembalikan seluruh baris.
-- **Potensi race condition stok** — pola "baca stok → cek → kurangi" bisa oversell bila dua order untuk produk sama masuk (nyaris) bersamaan. Untuk beban produksi tinggi perlu penguncian baris atau update bersyarat.
+- **`GET /orders` tanpa urutan/pagination** — berbeda dengan `menus` yang memakai `orderBy: { createdAt: 'desc' }`, `findAll` order belum menetapkan urutan dan selalu mengembalikan seluruh baris.
+- **Potensi race condition stok** — pola "baca stok → cek → kurangi" bisa oversell bila dua order untuk menu sama masuk (nyaris) bersamaan. Untuk beban produksi tinggi perlu penguncian baris atau update bersyarat.
 - **Perhitungan uang memakai `number` JavaScript** — `subtotal` & `totalAmount` dihitung sebagai `number` lalu disimpan ke kolom `Decimal`. Untuk nilai besar/pecahan idealnya perhitungan dilakukan dengan tipe `Decimal` agar bebas galat floating point.
 - **Belum ada integrasi pembayaran** — model `Payment` sudah ada di skema tetapi belum ada module/endpoint-nya (lihat [Roadmap Order, Table & Payment](../database.md#roadmap-order-table--payment)).
 - **Lookup `tableCode` tidak ikut dalam `$transaction`** — dijalankan sebagai baca terpisah sebelum transaksi. Secara teori ada celah kecil (meja dihapus tepat di antara lookup dan pembuatan order), tapi risikonya rendah karena meja dengan order aktif [tidak bisa dihapus](tables.md#business-rules).

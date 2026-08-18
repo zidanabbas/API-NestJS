@@ -12,7 +12,7 @@ export class OrdersRepository {
       include: {
         items: {
           include: {
-            product: true,
+            menu: true,
           },
         },
         table: true,
@@ -25,7 +25,7 @@ export class OrdersRepository {
       include: {
         items: {
           include: {
-            product: true,
+            menu: true,
           },
         },
         table: true,
@@ -39,7 +39,7 @@ export class OrdersRepository {
       include: {
         items: {
           include: {
-            product: true,
+            menu: true,
           },
         },
         payment: true,
@@ -56,7 +56,7 @@ export class OrdersRepository {
       },
       include: {
         items: {
-          include: { product: true },
+          include: { menu: true },
         },
         table: true,
       },
