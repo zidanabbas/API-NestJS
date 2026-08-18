@@ -9,5 +9,6 @@ import { TablesModule } from '#app/modules/tables/tables.module.js';
   imports: [PrismaModule, TablesModule],
   controllers: [OrdersController],
   providers: [OrdersService, OrdersRepository],
+  exports: [OrdersRepository],
 })
 export class OrdersModule {}

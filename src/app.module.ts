@@ -13,6 +13,7 @@ import { CategoriesModule } from './modules/categories/categories.module.js';
 import { MenusModule } from './modules/menus/menus.module.js';
 import { OrdersModule } from './modules/orders/orders.module.js';
 import { TablesModule } from './modules/tables/tables.module.js';
+import { PaymentsModule } from './modules/payments/payments.module.js';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { TablesModule } from './modules/tables/tables.module.js';
     MenusModule,
     OrdersModule,
     TablesModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
