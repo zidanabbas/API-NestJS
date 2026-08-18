@@ -44,7 +44,7 @@ Login menggunakan email & password. Bila berhasil, server **mengeset cookie `acc
 
 ```json
 {
-  "email": "budi@example.com",
+  "email": "jhondoe@example.com",
   "password": "secret123"
 }
 ```
@@ -68,8 +68,8 @@ Body (payload di dalam `data`, lihat [response envelope](../architecture.md#resp
   "data": {
     "user": {
       "id": 1,
-      "name": "Budi Santoso",
-      "email": "budi@example.com",
+      "name": "Jhon Doe",
+      "email": "jhondoe@example.com",
       "role": "CUSTOMER"
     }
   }
@@ -115,7 +115,7 @@ Token berisi payload berikut (lihat `AuthService.login` di [auth.service.ts](../
 ```json
 {
   "sub": 1,
-  "email": "budi@example.com",
+  "email": "jhondoe@example.com",
   "role": "CUSTOMER",
   "iat": 1755050400,
   "exp": 1755136800
@@ -123,7 +123,7 @@ Token berisi payload berikut (lihat `AuthService.login` di [auth.service.ts](../
 ```
 
 - `sub` — user ID
-- `role` — disisipkan untuk kebutuhan otorisasi berbasis role di masa depan (saat ini **belum ada** `RolesGuard`/decorator role di codebase)
+- `role` — dipakai untuk otorisasi berbasis role: `RolesGuard` membaca `@Roles(UserRole.ADMIN)` dan membandingkannya dengan `role` di payload JWT (dipakai pada endpoint tulis menus/categories/tables serta update status order & payment)
 
 ## Mengakses Endpoint yang Diproteksi
 
@@ -135,7 +135,7 @@ Contoh dengan `curl` memakai cookie jar (`-c` menyimpan cookie saat login, `-b` 
 # 1. Login → simpan cookie ke berkas
 curl -c cookies.txt -X POST http://localhost:3000/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"budi@example.com","password":"secret123"}'
+  -d '{"email":"jhondoe@example.com","password":"secret123"}'
 
 # 2. Akses endpoint terlindung → kirim cookie
 curl -b cookies.txt http://localhost:3000/api/v1/users

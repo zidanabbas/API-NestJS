@@ -6,13 +6,14 @@ Membuat dan membaca pesanan. Membuat order adalah operasi **multi-langkah** yang
 
 ## Endpoint
 
-| Method | Path                 |  Auth  | Deskripsi                        |
-| ------ | -------------------- | :----: | -------------------------------- |
-| `POST` | `/api/v1/orders`     | Publik | Buat pesanan baru dengan itemnya |
-| `GET`  | `/api/v1/orders`     | Publik | Daftar semua pesanan             |
-| `GET`  | `/api/v1/orders/:id` | Publik | Detail satu pesanan              |
+| Method  | Path                        |   Auth   | Deskripsi                                         |
+| ------- | --------------------------- | :------: | ------------------------------------------------- |
+| `POST`  | `/api/v1/orders`            |  Publik  | Buat pesanan baru dengan itemnya (guest checkout) |
+| `GET`   | `/api/v1/orders`            |   🔒     | Daftar semua pesanan                              |
+| `GET`   | `/api/v1/orders/:id`        |  Publik  | Detail satu pesanan                               |
+| `PATCH` | `/api/v1/orders/:id/status` | 🔒 ADMIN | Ubah status pesanan (state machine)               |
 
-> Lihat [Catatan & Batasan](#catatan--batasan-saat-ini) — semua endpoint saat ini **tidak** dilindungi login/role apa pun.
+> **Auth:** `POST` sengaja **publik** — pelanggan memesan tanpa akun (model *guest checkout*). `GET /orders` (daftar semua) butuh **login** (`JwtAuthGuard`). `PATCH /:id/status` khusus **ADMIN**. `GET /orders/:id` saat ini belum diberi guard — lihat [Catatan & Batasan](#catatan--batasan-saat-ini).
 
 Setiap response order menyertakan relasi `items` (masing-masing dengan `menu` lengkap) dan `table` (`null` bila order tanpa meja). Endpoint detail (`GET /:id`) juga menyertakan relasi `payment`.
 
@@ -162,6 +163,56 @@ Beberapa hal penting pada response ini:
 }
 ```
 
+### `PATCH /api/v1/orders/:id/status` 🔒 ADMIN — Ubah Status Pesanan
+
+Mengubah status pesanan mengikuti **state machine** yang ketat — admin tidak bisa melompati atau memundurkan status sembarangan.
+
+**Alur transisi yang diizinkan** ([order-status.constant.ts](../../src/modules/orders/constants/order-status.constant.ts)):
+
+```
+PENDING → CONFIRMED → PREPARING → READY → COMPLETED
+   ↓          ↓
+CANCELLED  CANCELLED
+```
+
+| Dari status | Boleh pindah ke |
+| ----------- | --------------- |
+| `PENDING` | `CONFIRMED`, `CANCELLED` |
+| `CONFIRMED` | `PREPARING`, `CANCELLED` |
+| `PREPARING` | `READY` |
+| `READY` | `COMPLETED` |
+| `COMPLETED` | — (final) |
+| `CANCELLED` | — (final) |
+
+**Request body** ([UpdateOrderStatusDto](../../src/modules/orders/dto/update-order.dto.ts)):
+
+```json
+{ "status": "CONFIRMED" }
+```
+
+| Field | Tipe | Validasi |
+| ----- | ---- | -------- |
+| `status` | `OrderStatus` | wajib, salah satu nilai enum (`@IsEnum`) |
+
+**Response `200 OK`** — order setelah update, lengkap dengan `items` (beserta `menu`) dan `table`.
+
+**Response `400 Bad Request`** — transisi tidak diizinkan atau status sudah sama:
+
+```json
+{
+  "success": false,
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Cannot change status from PENDING to COMPLETED",
+  "path": "/api/v1/orders/1/status",
+  "timestamp": "2026-08-18T02:00:00.000Z"
+}
+```
+
+**Response `403 Forbidden`** — pelaku bukan `ADMIN`. **Response `404 Not Found`** — order tidak ada.
+
+> Validasi transisi ada di `OrdersService.updateStatus` lewat helper `canTransition(from, to)` — aturan state machine (data) dipisah dari logika orkestrasi (service), lihat [Implementasi Teknis](#implementasi-teknis).
+
 ## Pengaitan Meja (`tableCode`)
 
 Order bisa opsional dikaitkan ke meja fisik (dine-in) lewat field `tableCode` di request body:
@@ -187,17 +238,21 @@ Seluruh aturan berikut dijalankan **di dalam satu transaksi** ([orders.service.t
 4. **Stok harus cukup** — jika `menu.stock < quantity` → `400 Bad Request` (`"Insufficient stock for <nama>"`).
 5. **Hitung harga** — `price` disnapshot dari menu, `subtotal = price × quantity`, `totalAmount` diakumulasi dari seluruh item.
 6. **Buat order + item** — `Order` dibuat beserta `OrderItem` (nested `create`) dan `table` (nested `connect`, jika ada) dalam satu operasi.
-7. **Kurangi stok** — untuk tiap item, `menu.stock` di-`decrement` sebanyak `quantity`.
+7. **Kurangi stok (bersyarat/atomik)** — untuk tiap item dilakukan `menu.updateMany({ where: { id, stock: { gte: quantity } }, data: { decrement } })`. Jika `count === 0` (stok keburu habis oleh order lain), lempar `400 Bad Request` — cek-dan-kurang jadi satu operasi atomik untuk mencegah oversell saat order berbarengan.
 
 Jika langkah mana pun melempar error, transaksi otomatis **rollback** — tidak ada order, item, maupun perubahan stok yang tersimpan.
+
+Selain pembuatan order, `OrdersService.updateStatus` menegakkan **state machine** transisi status (lihat [PATCH /:id/status](#patch-apiv1ordersidstatus--admin--ubah-status-pesanan)) — transisi ilegal ditolak `400 Bad Request`.
 
 ## Implementasi Teknis
 
 | File                                                                            | Peran                                                                                                                |
 | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| [orders.controller.ts](../../src/modules/orders/orders.controller.ts)           | Routing `POST` / `GET` / `GET :id`                                                                                   |
-| [orders.service.ts](../../src/modules/orders/orders.service.ts)                 | Orkestrasi transaksi, validasi item, hitung total, generate `orderNumber`, resolve `tableCode` → `tableId`           |
-| [orders.repository.ts](../../src/modules/orders/orders.repository.ts)           | Query Prisma (`create` menerima `tx`, `findAll`, `findById`, `updateStatus`; semua query `include: { table: true }`) |
+| [orders.controller.ts](../../src/modules/orders/orders.controller.ts)           | Routing `POST` / `GET` / `GET :id` / `PATCH :id/status`                                                              |
+| [orders.service.ts](../../src/modules/orders/orders.service.ts)                 | Orkestrasi transaksi, validasi item, hitung total, generate `orderNumber`, resolve `tableCode` → `tableId`, `updateStatus` (state machine) |
+| [orders.repository.ts](../../src/modules/orders/orders.repository.ts)           | Query Prisma (`create` menerima `tx`, `findAll`, `findById`, `updateStatus`; `updateStatus` juga `include: { items, table }`) |
+| [constants/order-status.constant.ts](../../src/modules/orders/constants/order-status.constant.ts) | Peta transisi `ORDER_STATUS_TRANSITIONS` + helper murni `canTransition(from, to)` |
+| [dto/update-order.dto.ts](../../src/modules/orders/dto/update-order.dto.ts)     | `UpdateOrderStatusDto` — validasi `status` (`@IsEnum(OrderStatus)`)                                                  |
 | [dto/create-order.dto.ts](../../src/modules/orders/dto/create-order.dto.ts)     | Validasi request create (termasuk nested `items`, `tableCode` opsional)                                              |
 | [dto/order-item.dto.ts](../../src/modules/orders/dto/order-item.dto.ts)         | Validasi tiap elemen `items` (`menuId`, `quantity`)                                                                  |
 | [dto/order-response.dto.ts](../../src/modules/orders/dto/order-response.dto.ts) | Shape response (`OrderResponseDto`, `OrderItemResponseDto`, `PaymentResponseDto`) untuk dokumentasi Swagger          |
@@ -212,10 +267,8 @@ Catatan implementasi:
 
 ## Catatan & Batasan Saat Ini
 
-- **Tidak ada guard autentikasi** — berbeda dari [menus](menus.md), [categories](categories.md), & [tables](tables.md) yang endpoint tulisnya kini dibatasi `ADMIN`, seluruh endpoint order masih publik: siapa pun bisa membuat/melihat order tanpa login. Perlu keputusan alur bisnis (pelanggan memesan sendiri vs. lewat kasir) sebelum menambah proteksi.
-- **`updateStatus` belum terekspos** — `OrdersRepository.updateStatus` sudah ada, tetapi belum ada service/controller yang memakainya. Jadi belum ada endpoint untuk mengubah status order (mis. `PENDING → CONFIRMED`). Kandidat kuat untuk `PATCH /api/v1/orders/:id/status`.
+- **RBAC belum seragam di sisi baca** — `POST /orders` sengaja publik (guest checkout). Namun `GET /orders/:id` **belum** diberi guard sama sekali (padahal `GET /orders` daftar sudah butuh login), dan `GET /orders` hanya butuh login — belum dibatasi `ADMIN`. Karena hanya ada role `ADMIN`/`CUSTOMER`, idealnya daftar & detail order dibatasi `ADMIN` (data operasional staff). Lihat prioritas perbaikan di sisi baca.
 - **`GET /orders` tanpa urutan/pagination** — berbeda dengan `menus` yang memakai `orderBy: { createdAt: 'desc' }`, `findAll` order belum menetapkan urutan dan selalu mengembalikan seluruh baris.
-- **Potensi race condition stok** — pola "baca stok → cek → kurangi" bisa oversell bila dua order untuk menu sama masuk (nyaris) bersamaan. Untuk beban produksi tinggi perlu penguncian baris atau update bersyarat.
 - **Perhitungan uang memakai `number` JavaScript** — `subtotal` & `totalAmount` dihitung sebagai `number` lalu disimpan ke kolom `Decimal`. Untuk nilai besar/pecahan idealnya perhitungan dilakukan dengan tipe `Decimal` agar bebas galat floating point.
-- **Belum ada integrasi pembayaran** — model `Payment` sudah ada di skema tetapi belum ada module/endpoint-nya (lihat [Roadmap Order, Table & Payment](../database.md#roadmap-order-table--payment)).
+- **Pembayaran** — kini sudah ada module [`payments`](payments.md) (QRIS) untuk membuat & mengonfirmasi pembayaran atas sebuah order. Integrasi gateway QRIS asli (webhook, `transactionId`) masih placeholder.
 - **Lookup `tableCode` tidak ikut dalam `$transaction`** — dijalankan sebagai baca terpisah sebelum transaksi. Secara teori ada celah kecil (meja dihapus tepat di antara lookup dan pembuatan order), tapi risikonya rendah karena meja dengan order aktif [tidak bisa dihapus](tables.md#business-rules).

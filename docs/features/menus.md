@@ -6,15 +6,15 @@ CRUD penuh untuk item menu. Setiap item menu wajib terhubung ke satu `Category` 
 
 ## Endpoint
 
-| Method | Path | Auth | Deskripsi |
-| ------ | ---- | :--: | --------- |
-| `POST`   | `/api/v1/menus` | 🔒 ADMIN | Buat menu baru |
-| `GET`    | `/api/v1/menus` | Publik | Daftar semua menu (opsional `?search=`) |
-| `GET`    | `/api/v1/menus/:id` | Publik | Detail satu menu |
-| `PATCH`  | `/api/v1/menus/:id` | 🔒 ADMIN | Update menu |
-| `DELETE` | `/api/v1/menus/:id` | 🔒 ADMIN | Hapus menu |
+| Method   | Path                |   Auth   | Deskripsi                               |
+| -------- | ------------------- | :------: | --------------------------------------- |
+| `POST`   | `/api/v1/menus`     | 🔒 ADMIN | Buat menu baru                          |
+| `GET`    | `/api/v1/menus`     |  Publik  | Daftar semua menu (opsional `?search=`) |
+| `GET`    | `/api/v1/menus/:id` |  Publik  | Detail satu menu                        |
+| `PATCH`  | `/api/v1/menus/:id` | 🔒 ADMIN | Update menu                             |
+| `DELETE` | `/api/v1/menus/:id` | 🔒 ADMIN | Hapus menu                              |
 
-> 🔒 ADMIN = butuh login **dan** role `ADMIN` (`JwtAuthGuard` + `RolesGuard` + `@Roles(UserRole.ADMIN)`). Tanpa login → `401`, login non-ADMIN → `403 Forbidden`. Endpoint `GET` tetap publik.
+> ADMIN = butuh login **dan** role `ADMIN` (`JwtAuthGuard` + `RolesGuard` + `@Roles(UserRole.ADMIN)`). Tanpa login → `401`, login non-ADMIN → `403 Forbidden`. Endpoint `GET` tetap publik.
 
 Setiap response menu (single maupun list) menyertakan relasi `category` secara penuh (`include: { category: true }`).
 
@@ -33,14 +33,14 @@ Setiap response menu (single maupun list) menyertakan relasi `category` secara p
 }
 ```
 
-| Field | Tipe | Validasi |
-| ----- | ---- | -------- |
-| `categoryId` | `number` | wajib, integer, minimal `1`, kategori harus sudah ada |
-| `name` | `string` | wajib, tidak boleh kosong, maksimal 255 karakter |
-| `description` | `string` | opsional |
-| `price` | `number` | wajib, integer, minimal `0` |
-| `imageUrl` | `string` | opsional, harus URL valid |
-| `stock` | `number` | wajib, integer, minimal `0` |
+| Field         | Tipe     | Validasi                                              |
+| ------------- | -------- | ----------------------------------------------------- |
+| `categoryId`  | `number` | wajib, integer, minimal `1`, kategori harus sudah ada |
+| `name`        | `string` | wajib, tidak boleh kosong, maksimal 255 karakter      |
+| `description` | `string` | opsional                                              |
+| `price`       | `number` | wajib, integer, minimal `0`                           |
+| `imageUrl`    | `string` | opsional, harus URL valid                             |
+| `stock`       | `number` | wajib, integer, minimal `0`                           |
 
 **Response `201 Created`**:
 
@@ -88,8 +88,8 @@ Setiap response menu (single maupun list) menyertakan relasi `category` secara p
 
 **Query params** ([SearchMenuDto](../../src/modules/menus/dto/query-menu.dto.ts)):
 
-| Param | Tipe | Wajib | Deskripsi |
-| ----- | ---- | :---: | --------- |
+| Param    | Tipe     | Wajib | Deskripsi                                                                                  |
+| -------- | -------- | :---: | ------------------------------------------------------------------------------------------ |
 | `search` | `string` | tidak | Cari menu yang `name` **atau** `description`-nya mengandung kata kunci (case-insensitive). |
 
 Contoh: `GET /api/v1/menus?search=kopi`.
@@ -142,15 +142,15 @@ Contoh: `GET /api/v1/menus?search=kopi`.
 
 ## Implementasi Teknis
 
-| File | Peran |
-| ---- | ----- |
-| [menus.controller.ts](../../src/modules/menus/menus.controller.ts) | Routing CRUD |
-| [menus.service.ts](../../src/modules/menus/menus.service.ts) | Validasi `categoryId`, business logic |
-| [menus.repository.ts](../../src/modules/menus/menus.repository.ts) | Query Prisma (selalu `include: { category: true }`) |
-| [dto/create-menu.dto.ts](../../src/modules/menus/dto/create-menu.dto.ts) | Validasi request create |
-| [dto/update-menu.dto.ts](../../src/modules/menus/dto/update-menu.dto.ts) | `PartialType(CreateMenuDto)` |
-| [dto/query-menu.dto.ts](../../src/modules/menus/dto/query-menu.dto.ts) | `SearchMenuDto` — query param `search` (opsional) untuk `GET /menus`, sekaligus mendokumentasikan param di Swagger |
-| [dto/menu-response.dto.ts](../../src/modules/menus/dto/menu-response.dto.ts) | Shape response (termasuk relasi `category`) untuk dokumentasi Swagger via `@ApiOkData`/`@ApiCreatedData` |
+| File                                                                         | Peran                                                                                                              |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| [menus.controller.ts](../../src/modules/menus/menus.controller.ts)           | Routing CRUD                                                                                                       |
+| [menus.service.ts](../../src/modules/menus/menus.service.ts)                 | Validasi `categoryId`, business logic                                                                              |
+| [menus.repository.ts](../../src/modules/menus/menus.repository.ts)           | Query Prisma (selalu `include: { category: true }`)                                                                |
+| [dto/create-menu.dto.ts](../../src/modules/menus/dto/create-menu.dto.ts)     | Validasi request create                                                                                            |
+| [dto/update-menu.dto.ts](../../src/modules/menus/dto/update-menu.dto.ts)     | `PartialType(CreateMenuDto)`                                                                                       |
+| [dto/query-menu.dto.ts](../../src/modules/menus/dto/query-menu.dto.ts)       | `SearchMenuDto` — query param `search` (opsional) untuk `GET /menus`, sekaligus mendokumentasikan param di Swagger |
+| [dto/menu-response.dto.ts](../../src/modules/menus/dto/menu-response.dto.ts) | Shape response (termasuk relasi `category`) untuk dokumentasi Swagger via `@ApiOkData`/`@ApiCreatedData`           |
 
 `MenusModule` meng-import `CategoriesModule` agar `CategoriesRepository` bisa di-inject ke `MenusService` untuk validasi relasi ([menus.module.ts](../../src/modules/menus/menus.module.ts)).
 
@@ -164,4 +164,4 @@ Contoh: `GET /api/v1/menus?search=kopi`.
 
 ## Riwayat
 
-Module ini sebelumnya bernama `products` (`/api/v1/products`, model Prisma `Product`, kolom `OrderItem.productId`). Di-rename menjadi `menus` pada 2026-08-18 — termasuk migration database [`20260818120000_rename_product_to_menu`](../../prisma/migrations/20260818120000_rename_product_to_menu/migration.sql) yang me-*rename* tabel/kolom tanpa kehilangan data.
+Module ini sebelumnya bernama `products` (`/api/v1/products`, model Prisma `Product`, kolom `OrderItem.productId`). Di-rename menjadi `menus` pada 2026-08-18 — termasuk migration database [`20260818120000_rename_product_to_menu`](../../prisma/migrations/20260818120000_rename_product_to_menu/migration.sql) yang me-_rename_ tabel/kolom tanpa kehilangan data.

@@ -16,11 +16,12 @@ Selamat datang di dokumentasi teknis Food Ordering API. Gunakan daftar di bawah 
 
 | Dokumen | Endpoint yang dibahas |
 | ------- | ---------------------- |
-| [features/auth.md](features/auth.md) | `POST /api/v1/auth/login` |
-| [features/users.md](features/users.md) | `GET /api/v1/users`, `POST /api/v1/users` |
+| [features/auth.md](features/auth.md) | `POST /api/v1/auth/login`, `POST /api/v1/auth/logout` |
+| [features/users.md](features/users.md) | `GET /api/v1/users`, `GET /api/v1/users/:id`, `POST /api/v1/users` |
 | [features/categories.md](features/categories.md) | `POST /api/v1/categories`, `GET /api/v1/categories`, `GET /api/v1/categories/:id`, `PATCH /api/v1/categories/:id`, `DELETE /api/v1/categories/:id` |
 | [features/menus.md](features/menus.md) | `POST /api/v1/menus`, `GET /api/v1/menus`, `GET /api/v1/menus/:id`, `PATCH /api/v1/menus/:id`, `DELETE /api/v1/menus/:id` |
-| [features/orders.md](features/orders.md) | `POST /api/v1/orders`, `GET /api/v1/orders`, `GET /api/v1/orders/:id` |
+| [features/orders.md](features/orders.md) | `POST /api/v1/orders`, `GET /api/v1/orders`, `GET /api/v1/orders/:id`, `PATCH /api/v1/orders/:id/status` |
+| [features/payments.md](features/payments.md) | `POST /api/v1/payments`, `GET /api/v1/payments/:id`, `PATCH /api/v1/payments/:id/status` |
 | [features/tables.md](features/tables.md) | `POST /api/v1/tables`, `GET /api/v1/tables`, `GET /api/v1/tables/code/:code`, `GET /api/v1/tables/:id`, `PATCH /api/v1/tables/:id`, `DELETE /api/v1/tables/:id` |
 
 ## Konvensi Dokumen

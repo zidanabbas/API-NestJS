@@ -37,16 +37,16 @@ JWT_SECRET=changeme
 JWT_EXPIRES_IN=1d
 ```
 
-| Variable | Wajib | Keterangan |
-| -------- | ----- | ---------- |
-| `NODE_ENV` | ❌ | `development` \| `production` \| dst. Dibaca oleh [src/config/app.config.ts](../src/config/app.config.ts) |
-| `PORT` | ❌ | Port HTTP server, default `3000` |
-| `DATABASE_URL` | ✅ | Connection string PostgreSQL. Dipakai oleh Prisma Client (`@prisma/adapter-pg`) di [src/database/prisma.service.ts](../src/database/prisma.service.ts) dan oleh `prisma.config.ts` untuk migrasi |
-| `DIRECT_URL` | ❌ | Connection string langsung ke database, dipakai bila `DATABASE_URL` melalui connection pooler (mis. PgBouncer) |
-| `JWT_SECRET` | ✅ | Secret HMAC untuk sign & verify token JWT. Aplikasi akan **gagal start** jika kosong (lihat [JwtStrategy](../src/modules/auth/strategies/jwt.strategy.ts)) |
-| `JWT_EXPIRES_IN` | ❌ | Masa berlaku access token, format [`ms`](https://github.com/vercel/ms) (mis. `1d`, `12h`, `3600`) |
+| Variable         | Wajib | Keterangan                                                                                                                                                                                       |
+| ---------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `NODE_ENV`       | ❌    | `development` \| `production` \| dst. Dibaca oleh [src/config/app.config.ts](../src/config/app.config.ts)                                                                                        |
+| `PORT`           | ❌    | Port HTTP server, default `3000`                                                                                                                                                                 |
+| `DATABASE_URL`   | ✅    | Connection string PostgreSQL. Dipakai oleh Prisma Client (`@prisma/adapter-pg`) di [src/database/prisma.service.ts](../src/database/prisma.service.ts) dan oleh `prisma.config.ts` untuk migrasi |
+| `DIRECT_URL`     | ❌    | Connection string langsung ke database, dipakai bila `DATABASE_URL` melalui connection pooler (mis. PgBouncer)                                                                                   |
+| `JWT_SECRET`     | ✅    | Secret HMAC untuk sign & verify token JWT. Aplikasi akan **gagal start** jika kosong (lihat [JwtStrategy](../src/modules/auth/strategies/jwt.strategy.ts))                                       |
+| `JWT_EXPIRES_IN` | ❌    | Masa berlaku access token, format [`ms`](https://github.com/vercel/ms) (mis. `1d`, `12h`, `3600`)                                                                                                |
 
-> ⚠️ Jangan commit file `.env` — sudah termasuk dalam `.gitignore`. Untuk production, ganti `JWT_SECRET` dengan random string yang kuat.
+> Jangan commit file `.env` sudah termasuk dalam `.gitignore`. Untuk production, ganti `JWT_SECRET` dengan random string yang kuat.
 
 ## 3. Setup Database
 
@@ -57,6 +57,7 @@ npx prisma migrate dev
 ```
 
 Perintah ini akan:
+
 1. Membuat/menyamakan skema tabel di database sesuai [`prisma/schema.prisma`](../prisma/schema.prisma).
 2. Meng-generate ulang Prisma Client ke [`src/generated/prisma`](../src/generated/prisma).
 
@@ -68,7 +69,7 @@ npx prisma studio        # buka GUI untuk melihat/edit data
 npx prisma migrate deploy  # apply migrasi di production (tanpa prompt)
 ```
 
-> 📖 Referensi lengkap Prisma CLI ada di skill `prisma-cli`, dan Prisma Client API di skill `prisma-client-api`.
+> Referensi lengkap Prisma CLI ada di skill `prisma-cli`, dan Prisma Client API di skill `prisma-client-api`.
 
 ## 4. Jalankan Aplikasi
 
@@ -83,7 +84,7 @@ npm run start
 npm run start:debug
 ```
 
-> `start:dev` memakai `nest start --watch` (tsc incremental) — hanya meng-compile file yang berubah lalu restart. Tidak ada lagi full rebuild + `tsc-alias` + `nodemon` seperti sebelumnya, sehingga jauh lebih ringan.
+> `start:dev` memakai `nest start --watch` (tsc incremental) hanya meng-compile file yang berubah lalu restart. Tidak ada lagi full rebuild + `tsc-alias` + `nodemon` seperti sebelumnya, sehingga jauh lebih ringan.
 
 Setelah aktif:
 
@@ -116,11 +117,11 @@ npm run format  # prettier --write
 
 ## Troubleshooting
 
-| Gejala | Kemungkinan Penyebab | Solusi |
-| ------ | --------------------- | ------ |
-| App gagal start dengan error `JWT_SECRET is not configured` | `.env` belum dibuat atau `JWT_SECRET` kosong | Isi `JWT_SECRET` di `.env` |
-| Error koneksi database saat start / migrate | `DATABASE_URL` salah atau PostgreSQL belum jalan | Cek kredensial & pastikan service PostgreSQL aktif |
-| Tipe Prisma (`#app/generated/prisma/...`) tidak ditemukan setelah ubah schema | Prisma Client belum di-generate ulang | Jalankan `npx prisma generate` |
-| Route mengembalikan 401 padahal sudah login | Cookie `access_token` tidak terkirim (request tanpa `credentials`/cookie jar) atau token sudah expired | Login ulang; pastikan request menyertakan cookie (browser otomatis; `curl` pakai `-b cookies.txt`) |
+| Gejala                                                                        | Kemungkinan Penyebab                                                                                   | Solusi                                                                                             |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| App gagal start dengan error `JWT_SECRET is not configured`                   | `.env` belum dibuat atau `JWT_SECRET` kosong                                                           | Isi `JWT_SECRET` di `.env`                                                                         |
+| Error koneksi database saat start / migrate                                   | `DATABASE_URL` salah atau PostgreSQL belum jalan                                                       | Cek kredensial & pastikan service PostgreSQL aktif                                                 |
+| Tipe Prisma (`#app/generated/prisma/...`) tidak ditemukan setelah ubah schema | Prisma Client belum di-generate ulang                                                                  | Jalankan `npx prisma generate`                                                                     |
+| Route mengembalikan 401 padahal sudah login                                   | Cookie `access_token` tidak terkirim (request tanpa `credentials`/cookie jar) atau token sudah expired | Login ulang; pastikan request menyertakan cookie (browser otomatis; `curl` pakai `-b cookies.txt`) |
 
 Lanjut ke [architecture.md](architecture.md) untuk memahami struktur aplikasi secara menyeluruh.

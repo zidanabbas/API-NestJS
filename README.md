@@ -30,29 +30,29 @@ Food Ordering API adalah backend service untuk aplikasi pemesanan makanan. Saat 
 
 ## Tech Stack
 
-| Layer            | Teknologi |
-| ----------------- | --------- |
-| Framework          | [NestJS 11](https://nestjs.com) (Express platform) |
-| Bahasa             | TypeScript 5 (ESM / `nodenext`) |
-| ORM                | [Prisma ORM 7](https://www.prisma.io) + `@prisma/adapter-pg` |
-| Database           | PostgreSQL |
-| Auth               | Passport + `@nestjs/jwt` (JWT Bearer) |
-| Validasi           | `class-validator` + `class-transformer` |
-| API Docs           | `@nestjs/swagger` (OpenAPI, tersedia di `/docs`) |
-| Password Hashing   | `bcrypt` |
-| Keamanan HTTP      | `helmet`, CORS |
-| Testing            | Jest + Supertest |
+| Layer            | Teknologi                                                    |
+| ---------------- | ------------------------------------------------------------ |
+| Framework        | [NestJS 11](https://nestjs.com) (Express platform)           |
+| Bahasa           | TypeScript 5 (ESM / `nodenext`)                              |
+| ORM              | [Prisma ORM 7](https://www.prisma.io) + `@prisma/adapter-pg` |
+| Database         | PostgreSQL                                                   |
+| Auth             | Passport + `@nestjs/jwt` (JWT Bearer)                        |
+| Validasi         | `class-validator` + `class-transformer`                      |
+| API Docs         | `@nestjs/swagger` (OpenAPI, tersedia di `/docs`)             |
+| Password Hashing | `bcrypt`                                                     |
+| Keamanan HTTP    | `helmet`, CORS                                               |
+| Testing          | Jest + Supertest                                             |
 
 ## Fitur
 
-| Fitur | Status | Dokumentasi |
-| ----- | ------ | ----------- |
-| Health check | ✅ | — |
-| Autentikasi (login JWT) | ✅ | [docs/features/auth.md](docs/features/auth.md) |
-| Manajemen User (registrasi & list) | ✅ | [docs/features/users.md](docs/features/users.md) |
-| Kategori Menu (CRUD) | ✅ | [docs/features/categories.md](docs/features/categories.md) |
-| Menu (CRUD) | ✅ | [docs/features/menus.md](docs/features/menus.md) |
-| Order & Payment (QRIS) | 🚧 skema database siap, service/endpoint belum dibuat | [docs/database.md](docs/database.md#roadmap-order--payment) |
+| Fitur                              | Status                                             | Dokumentasi                                                 |
+| ---------------------------------- | -------------------------------------------------- | ----------------------------------------------------------- |
+| Health check                       | ✅                                                 | —                                                           |
+| Autentikasi (login JWT)            | ✅                                                 | [docs/features/auth.md](docs/features/auth.md)              |
+| Manajemen User (registrasi & list) | ✅                                                 | [docs/features/users.md](docs/features/users.md)            |
+| Kategori Menu (CRUD)               | ✅                                                 | [docs/features/categories.md](docs/features/categories.md)  |
+| Menu (CRUD)                        | ✅                                                 | [docs/features/menus.md](docs/features/menus.md)            |
+| Order & Payment (QRIS)             | skema database siap, service/endpoint belum dibuat | [docs/database.md](docs/database.md#roadmap-order--payment) |
 
 Lihat detail lengkap tiap fitur (endpoint, request/response, business rules) di folder [`docs/`](docs/README.md).
 
@@ -112,14 +112,14 @@ Panduan instalasi lengkap (termasuk troubleshooting) ada di [docs/getting-starte
 
 ## Environment Variables
 
-| Variable          | Wajib | Default       | Keterangan |
-| ------------------ | ----- | ------------- | ---------- |
-| `NODE_ENV`          | ❌    | `development` | Environment aplikasi |
-| `PORT`              | ❌    | `3000`        | Port HTTP server |
-| `DATABASE_URL`      | ✅    | —             | Connection string PostgreSQL, dipakai Prisma |
-| `DIRECT_URL`        | ❌    | —             | Connection string langsung (opsional, untuk migrasi di balik connection pooler) |
-| `JWT_SECRET`        | ✅    | —             | Secret untuk sign/verify JWT — **wajib diganti di production** |
-| `JWT_EXPIRES_IN`    | ❌    | `1d`          | Masa berlaku access token |
+| Variable         | Wajib | Default       | Keterangan                                                                      |
+| ---------------- | ----- | ------------- | ------------------------------------------------------------------------------- |
+| `NODE_ENV`       | ❌    | `development` | Environment aplikasi                                                            |
+| `PORT`           | ❌    | `3000`        | Port HTTP server                                                                |
+| `DATABASE_URL`   | ✅    | —             | Connection string PostgreSQL, dipakai Prisma                                    |
+| `DIRECT_URL`     | ❌    | —             | Connection string langsung (opsional, untuk migrasi di balik connection pooler) |
+| `JWT_SECRET`     | ✅    | —             | Secret untuk sign/verify JWT — **wajib diganti di production**                  |
+| `JWT_EXPIRES_IN` | ❌    | `1d`          | Masa berlaku access token                                                       |
 
 Lihat contoh lengkap di [`.env.example`](.env.example).
 
@@ -176,4 +176,4 @@ Semua dokumentasi detail (arsitektur, skema database, dan spesifikasi tiap fitur
 
 ## Lisensi
 
-`UNLICENSED` — proyek privat, hak cipta oleh pemilik repository.
+**License** — This is a private project. All rights reserved to Zidane Abbas.
